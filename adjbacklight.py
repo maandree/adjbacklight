@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 from subprocess import Popen, PIPE
 
 
@@ -14,14 +15,23 @@ def print(text = '', end = '\n'):
 
 
 
-
 '''
 This is the mane class of the program
 '''
 class Adjbacklight():
-
-#Popen(compressCommand(ext).split(' '), stdout=fileout, stdin=filein).communicate()
-#(out, err) = Popen(['env', 'python', '--version'], stdout=PIPE, stderr=PIPE).communicate()
+    def __init__(self):
+        Popen('stty -icanon'.split(' ')).wait()
+        try:
+            dir = '/sys/class/backlight/intel_backlight/'
+            (size, dummy) = Popen('stty size'.split(' '), stdout=PIPE, stderr=PIPE).communicate()
+            width = int(size.decode('UTF-8').replace('\n', '').split(' ')[1])
+            with open(dir + 'brightness', 'r') as file:
+                current = int(file.readline().replace('\n', ''))
+            with open(dir + 'max_brightness', 'r') as file:
+                max = int(file.readline().replace('\n', ''))
+            
+        finally:
+            Popen('stty icanon'.split(' ')).wait()
 
 
 '''
