@@ -20,7 +20,7 @@ This is the mane class of the program
 '''
 class Adjbacklight():
     def __init__(self):
-        Popen('stty -icanon'.split(' ')).wait()
+        #Popen('stty -icanon'.split(' '), stderr=os.fdopen(2, 'w')).wait()
         try:
             dir = '/sys/class/backlight/intel_backlight/'
             (size, dummy) = Popen('stty size'.split(' '), stdout=PIPE, stderr=PIPE).communicate()
@@ -29,9 +29,15 @@ class Adjbacklight():
                 current = int(file.readline().replace('\n', ''))
             with open(dir + 'max_brightness', 'r') as file:
                 max = int(file.readline().replace('\n', ''))
-            
+            self.__interface(0, current, max, width, dir + 'brightness')
         finally:
-            Popen('stty icanon'.split(' ')).wait()
+            pass#Popen('stty icanon'.split(' '), stderr=os.fdopen(2, 'w')).wait()
+    
+    def __interface(self, min, cur, max, width, file):
+        step = (max - min) // 100
+        while (True):
+            print(sys.stdin.buffer.read1())
+        
 
 
 '''
