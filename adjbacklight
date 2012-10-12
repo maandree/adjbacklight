@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+if [[ ! -f 'Adjbacklight.class' ]]; then
+    javac -cp . Adjbacklight.java || exit 1
+fi
+
+cat <<.
+
+
+If the program is abnormal aborted there may be effects
+on the terminal the following commands should reset it:
+
+    stty icanon echo
+    echo -en '\033[?25h'
+
+
+
+
+.
+
+stty -icanon -echo
+if [[ $? = 0 ]]; then
+    echo -en '\033[?25l'
+    sudo java -cp . Adjbacklight `stty size`
+    echo -en '\033[?25h'
+    stty icanon echo
+else
+    echo -e '\e[1;31m::\e[39m Epic failure\e[21m'
+fi
