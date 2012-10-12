@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-if [[ ! -f 'Adjbacklight.class' ]]; then
-    javac -cp . Adjbacklight.java || exit 1
-fi
-
 cat <<.
 
 
