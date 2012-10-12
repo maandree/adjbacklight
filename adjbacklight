@@ -17,7 +17,7 @@ on the terminal the following commands should reset it:
 stty -icanon -echo
 if [[ $? = 0 ]]; then
     echo -en '\033[?25l'
-    sudo java -cp . Adjbacklight `stty size`
+    sudo java -cp ${BASH_SOURCE%/*} Adjbacklight `stty size`
     echo -en '\033[?25h'
     stty icanon echo
 else
