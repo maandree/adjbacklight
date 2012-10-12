@@ -3,8 +3,8 @@
 cat <<.
 
 
-If the program is abnormal aborted there may be effects
-on the terminal the following commands should reset it:
+If the program is abnormally aborted there may be effects
+on the terminal, the following commands should reset it:
 
     stty icanon echo
     echo -en '\033[?25h'
