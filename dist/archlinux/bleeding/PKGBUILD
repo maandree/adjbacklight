@@ -9,14 +9,13 @@
 # Maintainer: Mattias Andrée <maandree@operamail.com>
 pkgname=adjbacklight-git
 pkgver=20121116
-pkgrel=1
+pkgrel=2
 pkgdesc="Convient method for adjusting the backlight on your portable computer"
 arch=('any')
 url="https://github.com/maandree/adjbacklight"
 license=('GPL3')
 depends=('java-runtime>=6')
 makedepends=('git' 'java-environment>=6' 'bash')
-optdepends=('imagemagick: allows imgsrcrecovery to read frames in GIF files' 'perl: required for cowsay2unisay')
 provides=('adjbacklight')
 conflicts=('adjbacklight')
 
