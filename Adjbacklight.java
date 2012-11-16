@@ -27,7 +27,7 @@ public class Adjbacklight
 {
     public static void main(final String... args) throws IOException
     {
-	String dir = "/sys/class/backlight/intel_backlight/";
+	String dir = "/sys/class/backlight/" + args[2] + "/";
 	int width = Integer.parseInt(args[1]);
 	int max = 0, min = 0, cur = 0;
 	
