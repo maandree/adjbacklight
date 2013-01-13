@@ -35,8 +35,7 @@ on the terminal, the following commands should reset it:
 stty -icanon -echo
 if [[ $? = 0 ]]; then
     echo -en '\033[?25l'
-    ls -1 --color=no "/sys/class/backlight/" |
-    while read dir; do
+    for dir in $(ls -1 --color=no "/sys/class/backlight/" | grep -v '^acpi_video'); do
 	sudo java -cp ${BASH_SOURCE%/*} Adjbacklight `stty size` "$dir"
     done
     echo -en '\033[?25h'
