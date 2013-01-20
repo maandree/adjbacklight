@@ -108,12 +108,43 @@ arguments.
 @chapter Using
 @cindex usage
 @cindex keyboard
+@cindex darken screen
+@cindex brighten screen
+@cindex quit
+@cindex exit
+@cindex close
+@cindex next screen
+@cindex password
+@cindex @command{sudo}
+
+These key commands work when you start @command{adjbacklight} without
+arguments and can see a bar. Due to restricted write permissions in
+@file{/sys} you are required to enter your password and need to be a
+sudoer; if you do not want this you could make your init sequence
+give you write permissions to @file{/sys/class/backlight/*/brightness},
+and just remove the @command{sudo} in the bash script @file{adjbacklight}.
+
+The @kbd{left} and @kbd{down} arrow keys are used to darken the screen.
+The @kbd{right} and @kbd{up} arrow keys are used to brighten the screen.
+
+@kbd{q}, @kbd{enter} and @kbd{<control>d} continues to the next backlight
+controller, or if you are at the last one, quits the program.
 
 
 @node Behind the scenes
 @chapter Behind the scenes
 @cindex behind the scenes
 @cindex inner workings
+
+On normally configured Linux systems, the kernel mounts a virtual
+partition on @file{/sys}. If you have screens using backlight,
+you should find backlight device in @file{/sys/class/backlight}.
+These devices are directories containing control files which you
+can read the current values from or write to (perhaps using @command{echo})
+to modify the value. In a directory in @file{/sys/class/backlight}
+you will find @file{brightness} and @file{max_brightness}.
+Just read from @file{max_brightness} to get the maximum allowed integer
+value in @file{brightness}, the minimum value is 0.
 
 
 
