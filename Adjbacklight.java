@@ -1,7 +1,7 @@
 /**
  * adjbacklight – Convient method for adjusting the backlight on your portable computer
  * 
- * Copyright © 2012  Mattias Andrée (maandree@kth.se)
+ * Copyright © 2012, 2013  Mattias Andrée (maandree@member.fsf.org)
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,18 @@ import java.util.*;
 
 
 /**
- * @author  Mattias Andrée, <a href="mailto:maandree@kth.se">maandree@kth.se</a>
+ * Interactive backlight adjustment
+ * 
+ * @author  Mattias Andrée, <a href="mailto:maandree@member.fsf.org">maandree@member.fsf.org</a>
  */
 public class Adjbacklight
 {
+    /**
+     * The is the main entry point of the program
+     * 
+     * @param   args         Expects the three values: terminal height, terminal width, backlight device
+     * @throws  IOException  On error
+     */
     public static void main(final String... args) throws IOException
     {
 	String dir = "/sys/class/backlight/" + args[2] + "/";
@@ -95,6 +103,15 @@ public class Adjbacklight
 	    }
     }
     
+    /**
+     * Print the status
+     * 
+     * @param  min    The minimum possible brightness
+     * @param  max    The maximum possible brightness
+     * @param  init   The brightness used when the program started
+     * @param  cur    The current brightness
+     * @param  width  The width of the terminal
+     */
     private static void print(int min, int max, int init, int cur, int width)
     {
 	String line = "──────────────────────────────────";
