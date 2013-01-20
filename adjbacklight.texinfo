@@ -66,6 +66,21 @@ Texts. A copy of the license is included in the section entitled
 @cindex overview
 @cindex description
 
+@command{adjbacklight} is convient method for adjusting the backlight on your
+portable computer. Depending on your computer, the details of @command{adjbacklight}
+differs.
+
+For some computers program will adjust the same parameters as the keys on your
+keyboard, one other computers this program will adjust an independent parameter
+allowing more detailed adjustment and may not be affected by the battery status
+change. One some computers the keys for the suns does not do anything and is
+expected to be binded by the OS, for thoses computers this may be the best choice
+if you are in the TTY.
+
+@command{adjbacklight} allows 0.5 % precision, assuming that the firmware allows
+at least that. If you want higher precision, it is simple to modify the source
+code. Just @code{sed -i s/200/400/g Adjbacklight.java}, if you want 0.25 % precision.
+
 
 @node Invoking
 @chapter Invoking
