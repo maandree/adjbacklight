@@ -16,8 +16,8 @@ BOOKDIR=./
 
 
 # compile the package
-.PHONY: all info
-all: java
+.PHONY: all
+all: java info
 
 
 java: Adjbacklight.class
