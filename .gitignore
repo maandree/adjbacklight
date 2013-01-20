@@ -1,4 +1,4 @@
-/_/
+_/
 
 *.class
 
@@ -15,3 +15,19 @@
 /dist/*/*/*/
 *.gz
 *.xz
+
+/adjbacklight.aux
+/adjbacklight.cp
+/adjbacklight.cps
+/adjbacklight.fn
+/adjbacklight.ky
+/adjbacklight.log
+/adjbacklight.pg
+/adjbacklight.toc
+/adjbacklight.tp
+/adjbacklight.vr
+/adjbacklight.op
+/adjbacklight.ops
+/adjbacklight.pgs
+/adjbacklight.vrs
+
