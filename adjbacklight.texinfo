@@ -53,10 +53,14 @@ Texts. A copy of the license is included in the section entitled
 
 
 @menu
-* Overview::           Overview of @command{adjbacklight}
-* Invoking::           How to start @command{adjbacklight}
-* Using::              How to use @command{adjbacklight}
-* Behind the scenes::  How @command{adjbacklight} works
+* Overview::                        Overview of @command{adjbacklight}
+* Invoking::                        How to start @command{adjbacklight}
+* Using::                           How to use @command{adjbacklight}
+* Behind the scenes::               How @command{adjbacklight} works
+* License of adjbacklight::         Summary of the license of the program
+* GNU General Public License::      The license of the program
+* GNU Free Documentation License::  The license of this manual
+* Concept index::                   Concept index
 @end menu
 
 
@@ -88,7 +92,7 @@ code. Just @code{sed -i s/200/400/g Adjbacklight.java}, if you want 0.25 % preci
 @cindex starting
 @cindex options
 @cindex arguments
-@cindex@command{adjbacklight}
+@cindex @command{adjbacklight}
 @cindex @option{-c}
 @cindex @option{--copying}
 @cindex @option{--copyright}
