@@ -88,12 +88,26 @@ code. Just @code{sed -i s/200/400/g Adjbacklight.java}, if you want 0.25 % preci
 @cindex starting
 @cindex options
 @cindex arguments
+@cindex@command{adjbacklight}
+@cindex @option{-c}
+@cindex @option{--copying}
+@cindex @option{--copyright}
+@cindex @option{-w}
+@cindex @option{--warranty}
+
+@command{adjbacklight} can be started with @option{-c}, @option{--copying} or
+@option{--copyright} for displaying copyright information, @option{-w} or
+@option{--warranty} for displaying a warranty disclaimer. If any other options
+is used, help information is displayed.
+
+To actually use the program, just execute @command{adjbacklight} without any
+arguments.
 
 
 @node Using
 @chapter Using
 @cindex usage
-@cindex keybord
+@cindex keyboard
 
 
 @node Behind the scenes

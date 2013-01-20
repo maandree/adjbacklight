@@ -64,8 +64,10 @@ public class Adjbacklight
 	
 	if (max <= min)
 	    System.exit(127);
-        int step = (max - min) / 100;
+        int step = (max - min) / 200;
 	int init = cur;
+	if (step == 0)
+	    step = 1;
 	
 	System.out.print("\n\n\n\n\n\n");
 	print(min, max, init, cur, width);
