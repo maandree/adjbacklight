@@ -12,7 +12,8 @@ _/
 *.dvi
 *.info
 
-/dist/*/*/*/
+/dist/*/*/*
+!/dist/*/*/PKGBUILD
 *.gz
 *.xz
 
