@@ -52,6 +52,39 @@ Texts. A copy of the license is included in the section entitled
 @contents
 
 
+@menu
+* Overview::           Overview of @command{adjbacklight}
+* Invoking::           How to start @command{adjbacklight}
+* Using::              How to use @command{adjbacklight}
+* Behind the scenes::  How @command{adjbacklight} works
+@end menu
+
+
+
+@node Overview
+@chapter Overview
+@cindex overview
+@cindex description
+
+
+@node Invoking
+@chapter Invoking
+@cindex invoking
+@cindex starting
+@cindex options
+@cindex arguments
+
+
+@node Using
+@chapter Using
+@cindex usage
+@cindex keybord
+
+
+@node Behind the scenes
+@chapter Behind the scenes
+@cindex behind the scenes
+@cindex inner workings
 
 
 
