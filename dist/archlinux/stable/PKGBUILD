@@ -1,7 +1,7 @@
 # Maintainer: Mattias Andrée <`base64 -d`(bWFhbmRyZWUK)@member.fsf.org>
 pkgname=adjbacklight
 pkgver=4
-pkgrel=1
+pkgrel=2
 pkgdesc="Convient method for adjusting the backlight on your portable computer"
 arch=('any')
 url="https://github.com/maandree/adjbacklight"
@@ -11,7 +11,7 @@ makedepends=('java-environment>=6' 'bash')
 provides=('adjbacklight')
 conflicts=('adjbacklight')
 source=(https://github.com/maandree/adjbacklight/tarball/4)
-md5sums=(b1148f3e49855fde604a562d42250de6)
+md5sums=(052b7a96262ae0c181c65b2d4e89c28d)
 
 build() {
   cd maandree-adjbacklight-*
