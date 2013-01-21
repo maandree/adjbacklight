@@ -77,6 +77,7 @@ uninstall:
 	unlink $(DESTDIR)$(PREFIX)/bin/Adjbacklight.class
 	unlink $(DESTDIR)$(PREFIX)/bin/$(PROGRAM)
 	rm -r $(DESTDIR)$(PREFIX)/share/licenses/$(PROGRAM)
+	rm $(DESTDIR)$(PREFIX)/share/info/$(BOOK).info.gz
 
 # remove files created by `all`
 .PHONY: clean
