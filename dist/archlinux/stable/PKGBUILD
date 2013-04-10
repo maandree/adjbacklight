@@ -1,7 +1,7 @@
 # Maintainer: Mattias Andrée <`base64 -d`(bWFhbmRyZWUK)@member.fsf.org>
 pkgname=adjbacklight
 pkgver=4.1
-pkgrel=2
+pkgrel=1
 pkgdesc="Convient method for adjusting the backlight on your portable computer"
 arch=('any')
 url="https://github.com/maandree/adjbacklight"
