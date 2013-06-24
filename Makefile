@@ -9,21 +9,31 @@
 
 
 PREFIX=/usr
+BIN=/bin
+DATA=/share
+LICENSES=$(DATA)/licenses
+PKGNAME=adjbacklight
+COMMAND=adjbacklight
+BINCLASS=$(DATA)/misc
 
-PROGRAM=adjbacklight
-BOOK=$(PROGRAM)
+BOOK=adjbacklight
 BOOKDIR=info/
 
 
 # compile the package
 .PHONY: all
-all: java info
+all: code info
 
-
+code: bash java
+bash: adjbacklight.install
 java: Adjbacklight.class
 
 %.class: %.java
 	javac -cp . "$<"
+
+adjbacklight.install: adjbacklight
+	cp "$<" "$@"
+	sed -i 's:\$${BASH_SOURCE%/\*}:$(PREFIX)$(BINCLASS):g' "adjbacklight.install"
 
 info: $(BOOK).info.gz
 %.info: $(BOOKDIR)%.texinfo
@@ -60,27 +70,35 @@ dvi.xz: $(BOOK).dvi.xz
 
 
 # install to system
-.PHONY: install
-install:
-	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
-	mkdir -p "$(DESTDIR)$(PREFIX)/share/licenses/$(PROGRAM)"
-	mkdir -p "$(DESTDIR)$(PREFIX)/share/info/"
-	install -m 755 "$(PROGRAM)" "$(DESTDIR)$(PREFIX)/bin/"
-	install -m 644 Adjbacklight.class "$(DESTDIR)$(PREFIX)/bin/"
-	install -m 644 COPYING "$(DESTDIR)$(PREFIX)/share/licenses/$(PROGRAM)"
-	install -m 644 LICENSE "$(DESTDIR)$(PREFIX)/share/licenses/$(PROGRAM)"
-	install -m 644 "$(BOOK).info.gz" "$(DESTDIR)$(PREFIX)/share/info"
+install: install-cmd install-license install-info
+
+install-cmd: adjbacklight.install Adjbacklight.class
+	mkdir -p "$(DESTDIR)$(PREFIX)$(BIN)"
+	mkdir -p "$(DESTDIR)$(PREFIX)$(BINCLASS)"
+	install -m 755 "adjbacklight.install" "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
+	install -m 644 "Adjbacklight.class" "$(DESTDIR)$(PREFIX)$(BINCLASS)/Adjbacklight.class"
+
+install-license:
+	mkdir -p "$(DESTDIR)$(PREFIX)$(LICENSES)/$(PKGNAME)"
+	install -m 644 COPYING LICENSE "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)"
+
+install-info: $(BOOK).info.gz
+	mkdir -p "$(DESTDIR)$(PREFIX)$(DATA)/info"
+	install -m 644 "$(BOOK).info.gz" "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
+
 
 # remove files created by `install`
-.PHONY: uninstall
 uninstall:
-	unlink "$(DESTDIR)$(PREFIX)/bin/Adjbacklight.class"
-	unlink "$(DESTDIR)$(PREFIX)/bin/$(PROGRAM)"
-	rm -r "$(DESTDIR)$(PREFIX)/share/licenses/$(PROGRAM)"
-	rm "$(DESTDIR)$(PREFIX)/share/info/$(BOOK).info.gz"
+	-rm "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
+	-rm "$(DESTDIR)$(PREFIX)$(BINCLASS)/Adjbacklight.class"
+	-rm "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/COPYING"
+	-rm "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/LICENSE"
+	-rmdir "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)"
+	-rm "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
+
 
 # remove files created by `all`
 .PHONY: clean
 clean:
-	-rm -r *.{class,t2d,aux,cp,cps,fn,ky,log,pg,pgs,toc,tp,vr,vrs,op,ops,bak,info,pdf,ps,dvi,gz} 2>/dev/null
+	-rm -r *.{class,t2d,aux,cp,cps,fn,ky,log,pg,pgs,toc,tp,vr,vrs,op,ops,bak,info,pdf,ps,dvi,gz,install} 2>/dev/null
 

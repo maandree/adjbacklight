@@ -1,16 +1,16 @@
 _/
-
+.*
+!.git*
 *.class
-
 *~
 \#.\#
-.\#*
 *.swp
 *.bak
 *.pdf
 *.ps
 *.dvi
 *.info
+*.install
 
 /dist/*/*/*
 !/dist/*/*/PKGBUILD
