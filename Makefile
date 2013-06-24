@@ -12,7 +12,7 @@ PREFIX=/usr
 
 PROGRAM=adjbacklight
 BOOK=$(PROGRAM)
-BOOKDIR=./
+BOOKDIR=info/
 
 
 # compile the package
@@ -82,5 +82,5 @@ uninstall:
 # remove files created by `all`
 .PHONY: clean
 clean:
-	rm -r *.{class,t2d,aux,cp,cps,fn,ky,log,pg,pgs,toc,tp,vr,vrs,op,ops,bak,info,pdf,ps,dvi,gz} 2>/dev/null || exit 0
+	-rm -r *.{class,t2d,aux,cp,cps,fn,ky,log,pg,pgs,toc,tp,vr,vrs,op,ops,bak,info,pdf,ps,dvi,gz} 2>/dev/null
 
