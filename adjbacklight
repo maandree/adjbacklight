@@ -18,9 +18,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+all=0
+devices=()
+
 if (( $# > 0 )); then
     for arg in "$@"; do
 	case "$arg" in
+	    ("-a" | "--all")
+		all=1
+		;;
 	    ("-c" | "--copyright" | "--copying")
 		cat <<.
 
@@ -59,16 +65,22 @@ GNU General Public License for more details.
 .
 		exit 0
 		;;
+	    (*)
+		if [ ! "${arg::1}" = "-" ]; then
+		    devices+=( "$arg" )
+		fi
+		;;
 	esac
     done
-    cat <<.
+    if [ $all = 0 ] && [ ${#devices[@]} = 0 ]; then
+	cat <<.
 
 
 adjbacklight – Convient method for adjusting the backlight on your portable computer
 
-USAGE: adjbacklight [ -c | -w ]
+USAGE: adjbacklight [ -c | -w | -a | DEVICE...]
 
-Run with options to adjust the backlight on your screens.
+Run with options to adjust the backlight on your monitors.
 
 
 OPTIONS:
@@ -79,6 +91,9 @@ OPTIONS:
 
 -w
 --warranty      Display warranty disclaimer
+
+-a
+--all           Run for all devices, including ACPI devices 
 
 
 KEYBOARD:
@@ -102,7 +117,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 .
-    exit 0
+	exit 0
+    fi
 fi
 
 
@@ -113,7 +129,7 @@ If the program is abnormally aborted there may be effects
 on the terminal, the following commands should reset it:
 
     stty icanon echo
-    echo -en '\033[?25h'
+    echo -en '\e[?25h'
 
 
 
@@ -121,12 +137,25 @@ on the terminal, the following commands should reset it:
 .
 
 stty -icanon -echo
-if [[ $? = 0 ]]; then
-    echo -en '\033[?25l'
-    for dir in $(exec ls -1 --color=no "/sys/class/backlight/" | grep -v '^acpi_video'); do
-	sudo java -cp ${BASH_SOURCE%/*} Adjbacklight `stty size` "$dir"
-    done
-    echo -en '\033[?25h'
+if [ $? = 0 ]; then
+    echo -en '\e[?25l'
+    if [ ! ${#devices[@]} = 0 ]; then
+	for dir in "${devices[@]}"; do
+	    if [ "${dir::21}" = "/sys/class/backlight/" ]; then
+		dir="${dir:21}"
+	    fi
+	    sudo java -cp ${BASH_SOURCE%/*} Adjbacklight `stty size` "$dir"
+	done
+    elif [ $all = 0 ]; then
+	for dir in $(exec ls -1 --color=no "/sys/class/backlight/" | grep -v '^acpi_video'); do
+	    sudo java -cp ${BASH_SOURCE%/*} Adjbacklight `stty size` "$dir"
+	done
+    else
+	for dir in $(exec ls -1 --color=no "/sys/class/backlight/"); do
+	    sudo java -cp ${BASH_SOURCE%/*} Adjbacklight `stty size` "$dir"
+	done
+    fi
+    echo -en '\e[?25h'
     stty icanon echo
 else
     echo -e '\e[1;31m::\e[39m Epic failure\e[21m'

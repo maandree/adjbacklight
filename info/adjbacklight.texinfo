@@ -92,12 +92,16 @@ code. Just @code{sed -i s/200/400/g Adjbacklight.java}, if you want 0.25 % preci
 @cindex starting
 @cindex options
 @cindex arguments
+@cindex device
+@cindex selecting device
 @cindex @command{adjbacklight}
 @cindex @option{-c}
 @cindex @option{--copying}
 @cindex @option{--copyright}
 @cindex @option{-w}
 @cindex @option{--warranty}
+@cindex @option{-a}
+@cindex @option{--all}
 
 @command{adjbacklight} can be started with @option{-c}, @option{--copying} or
 @option{--copyright} for displaying copyright information, @option{-w} or
@@ -105,7 +109,9 @@ code. Just @code{sed -i s/200/400/g Adjbacklight.java}, if you want 0.25 % preci
 is used, help information is displayed.
 
 To actually use the program, just execute @command{adjbacklight} without any
-arguments.
+arguments, or with @option{-a} or @option{--all} to not limit the devices to
+those that are not ACPI video devices. Alternatively you can list the devices
+either by full path or just the name in the directory @file{/sys/class/backlight}.
 
 
 @node Using
