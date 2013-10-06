@@ -24,6 +24,7 @@ BOOKDIR=info/
 .PHONY: all
 all: code info
 
+.PHONY: code bash java
 code: bash java
 bash: adjbacklight.install
 java: Adjbacklight.class
@@ -35,6 +36,7 @@ adjbacklight.install: adjbacklight
 	cp "$<" "$@"
 	sed -i 's:\$${BASH_SOURCE%/\*}:$(PREFIX)$(BINCLASS):g' "adjbacklight.install"
 
+.PHONY: info
 info: $(BOOK).info.gz
 %.info: $(BOOKDIR)%.texinfo
 	$(MAKEINFO) "$<"
@@ -42,6 +44,7 @@ info: $(BOOK).info.gz
 	gzip -9c < "$<" > "$@"
 
 
+.PHONY: pdf
 pdf: $(BOOK).pdf
 %.pdf: $(BOOKDIR)%.texinfo
 	texi2pdf "$<"
@@ -55,6 +58,7 @@ pdf.xz: $(BOOK).pdf.xz
 	xz -e9 < "$<" > "$@"
 
 
+.PHONY: dvi
 dvi: $(BOOK).dvi
 %.dvi: $(BOOKDIR)%.texinfo
 	$(TEXI2DVI) "$<"
@@ -70,31 +74,36 @@ dvi.xz: $(BOOK).dvi.xz
 
 
 # install to system
+.PHONY: install
 install: install-cmd install-license install-info
 
+.PHONY: install-cmd
 install-cmd: adjbacklight.install Adjbacklight.class
-	mkdir -p "$(DESTDIR)$(PREFIX)$(BIN)"
-	mkdir -p "$(DESTDIR)$(PREFIX)$(BINCLASS)"
-	install -m 755 "adjbacklight.install" "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
-	install -m 644 "Adjbacklight.class" "$(DESTDIR)$(PREFIX)$(BINCLASS)/Adjbacklight.class"
+	install -d -- "$(DESTDIR)$(PREFIX)$(BIN)"
+	install -d -- "$(DESTDIR)$(PREFIX)$(BINCLASS)"
+	install -m755 -- "adjbacklight.install" "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
+	install -m644 -- "Adjbacklight.class" "$(DESTDIR)$(PREFIX)$(BINCLASS)/Adjbacklight.class"
 
+.PHONY: install-license
 install-license:
-	mkdir -p "$(DESTDIR)$(PREFIX)$(LICENSES)/$(PKGNAME)"
-	install -m 644 COPYING LICENSE "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)"
+	install -d -- "$(DESTDIR)$(PREFIX)$(LICENSES)/$(PKGNAME)"
+	install -m644 -- COPYING LICENSE "$(DESTDIR)$(PREFIX)$(LICENSES)/$(PKGNAME)"
 
+.PHONY: install-info
 install-info: $(BOOK).info.gz
-	mkdir -p "$(DESTDIR)$(PREFIX)$(DATA)/info"
-	install -m 644 "$(BOOK).info.gz" "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
+	install -d -- "$(DESTDIR)$(PREFIX)$(DATA)/info"
+	install -m644 -- "$(BOOK).info.gz" "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
 
 
 # remove files created by `install`
+.PHONY: uninstall
 uninstall:
-	-rm "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
-	-rm "$(DESTDIR)$(PREFIX)$(BINCLASS)/Adjbacklight.class"
-	-rm "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/COPYING"
-	-rm "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/LICENSE"
-	-rmdir "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)"
-	-rm "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
+	-rm -- "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
+	-rm -- "$(DESTDIR)$(PREFIX)$(BINCLASS)/Adjbacklight.class"
+	-rm -- "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/COPYING"
+	-rm -- "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/LICENSE"
+	-rm -d -- "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)"
+	-rm -- "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
 
 
 # remove files created by `all`
