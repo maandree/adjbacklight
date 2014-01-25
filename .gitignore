@@ -1,7 +1,8 @@
 _/
+bin/
+obj/
 .*
 !.git*
-*.class
 *~
 \#.\#
 *.swp
@@ -11,6 +12,10 @@ _/
 *.dvi
 *.info
 *.install
+*.class
+*.out
+*.o
+*.gch
 
 /dist/*/*/*
 !/dist/*/*/PKGBUILD
