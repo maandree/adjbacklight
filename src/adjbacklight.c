@@ -21,10 +21,20 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
 #include <limits.h>
+#include <alloca.h>
+
+
+
+
+#ifndef PATH_MAX
+#warning PATH_MAX is not defined
+#define PATH_MAX 4096
+#endif
 
 
 
@@ -43,11 +53,35 @@
 /**
  * Print a line to stdout
  * 
- * @param  S:char*  The string to print
+ * @param  S:const char*  The string to print
  */
 #define P(S)  printf("%s", S "\n")
 
 
+/**
+ * Cut a string of at the first line break
+ * A help `int` named `i` must be available
+ * 
+ * @param   data:char*  The string, it will be modified
+ * @return  :char*      The input string, it has been modified
+ */
+#define unnl(data)			\
+  ({					\
+    for (i = 0; *(data + i); i++)	\
+      if (*(data + i) == '\n')		\
+	*(data + i) = 0;		\
+    data;				\
+  })
+
+
+
+/**
+ * Test whether a string numerical and with at most two trailing '%'
+ * 
+ * @param   str  The string
+ * @return       Whether the test passed
+ */
+static int isnumerical(const char* str);
 
 /**
  * Interactively adjust the backlight on a device
@@ -56,6 +90,14 @@
  * @param  device  The device on which to adjust backlight
  */
 static void adjust(int cols, const char* device);
+
+/**
+ * Gets the current backlight setting on a device
+ * 
+ * @param   device  The device from which to get backlight
+ * @return          The brightness as a [0; 1] float, negative on error
+ */
+static float getbrightness(const char* device);
 
 /**
  * Read a file
@@ -113,9 +155,10 @@ int main(int argc, char** argv)
   struct winsize win;
   struct termios saved_stty;
   struct termios stty;
-  pid_t pid;
   int i, j;
-  int all = 0, cols = 80, ndevices = 0;
+  pid_t pid = 0;
+  char* set = NULL;
+  int get = 0, all = 0, cols = 80, ndevices = 0;
   char** devices = alloca(argc * sizeof(char*));
   
   
@@ -160,10 +203,36 @@ int main(int argc, char** argv)
 	      P("\n");
 	      return 0;
 	    }
+	  else if (T("-s") || T("--set"))
+	    {
+	      char* tmp;
+	      if (i + 1 == argc)
+		fprintf(stderr, "%s: argument for option %s is missing, ignoring option\n", *argv, arg);
+	      else
+		if (!isnumerical(tmp = *(argv + i++)))
+		  fprintf(stderr, "%s: argument for option %s is malformated, ignoring option\n", *argv, arg);
+		else
+		  {
+		    set = tmp;
+		    get = 0;
+		  }
+	    }
+	  else if (T("-g") || T("--get"))
+	    {
+	      get = 1;
+	      set = NULL;
+	    }
+	  else if (((*arg == '-') || (*arg == '+') || (*arg == '=')) && isnumerical(arg + 1))
+	    {
+	      set = arg;
+	      get = 0;
+	    }
 	  else
 	    {
 	      if (*arg && (*arg != '-'))
 		*(devices + ndevices++) = arg;
+	      else
+		fprintf(stderr, "%s: ignoring unrecognised argument: %s\n", *argv, arg);
 	    }
 	  #undef T
 	}
@@ -172,7 +241,7 @@ int main(int argc, char** argv)
 	  P("\n");
 	  P("adjbacklight - Convient method for adjusting the backlight on your portable computer");
 	  P("");
-	  P("USAGE: adjbacklight [ -c | -w | -a | DEVICE...]");
+	  P("USAGE: adjbacklight (-c | -w | [-g | -s LEVEL | LEVEL] [-a | DEVICE...])");
 	  P("");
 	  P("Run with options to adjust the backlight on your monitors.");
 	  P("");
@@ -187,7 +256,25 @@ int main(int argc, char** argv)
 	  P("--warranty      Display warranty disclaimer");
 	  P("");
 	  P("-a");
-	  P("--all           Run for all devices, including ACPI devices ");
+	  P("--all           Run for all devices, including ACPI devices");
+	  P("");
+	  P("-g");
+	  P("--get           Get average brightness on devices");
+	  P("");
+	  P("-s");
+	  P("--set LEVEL[%]  Set brightness on devices");
+	  P("");
+	  P("+LEVEL          Increase brightness on devices by actual value");
+	  P("-LEVEL          Decrease brightness on devices by actual value");
+	  P("=LEVEL          Set brightness on devices by actual value");
+	  P("");
+	  P("+LEVEL%         Increase brightness on devices by percentage");
+	  P("-LEVEL%         Decrease brightness on devices by percentage");
+	  P("=LEVEL%         Set brightness on devices by percentage");
+	  P("");
+	  P("+LEVEL%%        Increase brightness on devices by relative percentage");
+	  P("-LEVEL%%        Decrease brightness on devices by relative percentage");
+	  P("=LEVEL%%        Set brightness on devices by relative percentage");
 	  P("");
 	  P("");
 	  P("KEYBOARD:");
@@ -226,54 +313,66 @@ int main(int argc, char** argv)
   P("\n\n\n");
   
   
-  /* Get the size of the terminal */
-  if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &win) == -1)
-    perror(*argv);
-  else
-    cols = win.ws_col;
-  
-  /* Hide cursor */
-  printf("%s", "\033[?25l");
-  fflush(stdout);
-  
-  /* stty -icanon -echo */
-  if (tcgetattr(STDIN_FILENO, &stty))
+  if (!get && !set)
     {
-      perror(*argv);
-      return 1;
-    }
-  saved_stty = stty;
-  stty.c_lflag &= ~(ICANON | ECHO);
-  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty))
-    {
-      perror(*argv);
-      return 1;
+      /* Get the size of the terminal */
+      if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &win) == -1)
+	perror(*argv);
+      else
+	cols = win.ws_col;
+      
+      /* Hide cursor */
+      printf("%s", "\033[?25l");
+      fflush(stdout);
+      
+      /* stty -icanon -echo */
+      if (tcgetattr(STDIN_FILENO, &stty))
+	{
+	  perror(*argv);
+	  return 1;
+	}
+      saved_stty = stty;
+      stty.c_lflag &= ~(ICANON | ECHO);
+      if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty))
+	{
+	  perror(*argv);
+	  return 1;
+	}
     }
   
   
   /* Fork to diminish risk of unclean exit */
-  pid = FORK();
-  if (pid == (pid_t)-1)
+  if (!get && !set)
     {
-      perror(*argv);
-      pid = 0;
+      pid = FORK();
+      if (pid == (pid_t)-1)
+	{
+	  perror(*argv);
+	  pid = 0;
+	}
     }
   
   if (pid)
     waitpid(pid, NULL, 0);
   else
     {
-      line = malloc(cols * 3 * sizeof(char));
-      space = malloc(cols * sizeof(char));
-      for (i = 0; i < cols; i++)
+      float brightness = 0;
+      int nbrightness = 0;
+      
+      if (!get && !set)
 	{
-	  *(line + i * 3 + 0) = 0xE2;
-	  *(line + i * 3 + 1) = 0x94;
-	  *(line + i * 3 + 2) = 0x80;
-	  *(space + i) = ' ';
+	  line = malloc(cols * 3 * sizeof(char));
+	  space = malloc(cols * sizeof(char));
+	  for (i = 0; i < cols; i++)
+	    {
+	      *(line + i * 3 + 0) = (char)(0xE2);
+	      *(line + i * 3 + 1) = (char)(0x94);
+	      *(line + i * 3 + 2) = (char)(0x80);
+	      *(space + i) = ' ';
+	    }
+	  *(space + cols - 1) = 0;
+	  *(line + (cols - 2) * 3) = 0;
 	}
-      *(space + cols - 1) = 0;
-      *(line + (cols - 2) * 3) = 0;
       
       if (ndevices)
 	{
@@ -287,7 +386,17 @@ int main(int argc, char** argv)
 		    device += j + 1;
 		    j = -1;
 		  }
-	      adjust(cols, device);
+	      if (get)
+		{
+		  float value = getbrightness(device);
+		  if (value >= 0.f)
+		    {
+		      brightness += value;
+		      nbrightness++;
+		    }
+		}
+	      else
+		adjust(cols, device);
 	    }
 	}
       else
@@ -303,31 +412,88 @@ int main(int argc, char** argv)
 		  device = ent->d_name;
 		  if (all || (strstr(device, forbidden) != forbidden))
 		    if (*device && (*device != '.'))
-		      adjust(cols, device);
+		      {
+			if (get)
+			  {
+			    float value = getbrightness(device);
+			    if (value >= 0.f)
+			      {
+				brightness += value;
+				nbrightness++;
+			      }
+			  }
+			else
+			  adjust(cols, device);
+		      }
 		}
 	      closedir(dir);
 	    }
 	}
       
-      free(line);
-      free(space);
+      if (!get && !set)
+	{
+	  free(line);
+	  free(space);
+	}
+      else if (get)
+	{
+	  brightness *= 100.f;
+	  brightness /= nbrightness;
+	  printf("%.2f%%\n", brightness);
+	  fflush(stdout);
+	}
     }
   
   
-  /* `stty icanon echo` */
-  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_stty))
+  if (!get && !set)
     {
-      perror(*argv);
-      return 1;
+      /* `stty icanon echo` */
+      if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_stty))
+	{
+	  perror(*argv);
+	  return 1;
+	}
+      
+      /* Show cursor */
+      printf("%s", "\033[?25h");
+      fflush(stdout);
     }
-  
-  /* Show cursor */
-  printf("%s", "\033[?25h");
-  fflush(stdout);
   
   return 0;
 }
 
+
+/**
+ * Test whether a string numerical and with at most two trailing '%'
+ * 
+ * @param   str  The string
+ * @return       Whether the test passed
+ */
+static int isnumerical(const char* str)
+{
+  int p = 0, d = 0;
+  if ((*str == 0) || (*str == '%'))
+    return 0;
+  for (; *str; str++)
+    {
+      switch (*str)
+	{
+	case '.':
+	  if (d++)
+	    return 0;
+	  /* fall through */
+	case '0' ... '9':
+	  if (p)
+	    return 0;
+	  break;
+	  
+	case '%':
+	  p++;
+	  break;
+	}
+    }
+  return p <= 2;
+}
 
 
 /**
@@ -338,18 +504,10 @@ int main(int argc, char** argv)
  */
 static void adjust(int cols, const char* device)
 {
-  #define unnl(data)			\
-    ({					\
-      for (i = 0; *(data + i); i++)	\
-	if (*(data + i) == '\n')	\
-	  *(data + i) = 0;		\
-      data;				\
-    })
-  
   int min, max, cur, step, init, i, d;
   size_t lendir;
   char* dir = alloca(PATH_MAX * sizeof(char));
-  char* buf = alloca(256);
+  char* buf = alloca(256 * sizeof(char));
   
   *dir = 0;
   dir = strcat(dir, "/sys/class/backlight/");
@@ -398,6 +556,43 @@ static void adjust(int cols, const char* device)
 	  return;
 	bars(min, max, init, cur, cols);
       }
+}
+
+
+
+/**
+ * Gets the current backlight setting on a device
+ * 
+ * @param   device  The device from which to get backlight
+ * @return          The brightness as a [0; 1] float, negative on error
+ */
+static float getbrightness(const char* device)
+{
+  int min, max, cur, i;
+  size_t lendir;
+  char* dir = alloca(PATH_MAX * sizeof(char));
+  char* buf = alloca(256);
+  
+  *dir = 0;
+  dir = strcat(dir, "/sys/class/backlight/");
+  dir = strcat(dir, device);
+  dir = strcat(dir, "/");
+  lendir = strlen(dir);
+  
+  /* Get brightness parameters */
+  min = 0;
+  if (readfile(buf, strcat(dir, "max_brightness")))
+    return -1.f;
+  max = atoi(unnl(buf));
+  *(dir + lendir) = 0;
+  if (readfile(buf, strcat(dir, "brightness")))
+    return -1.f;
+  cur = atoi(unnl(buf));
+  
+  if (max <= min)
+    return -1.f; /* what the buck */
+  
+  return (float)cur / (float)(max - min);
 }
 
 
