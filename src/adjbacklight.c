@@ -37,7 +37,7 @@
 /**
  * Forking method
  */
-#define FORK  vfork
+#define FORK  fork
 
 
 /**
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
   fflush(stdout);
   
   /* stty -icanon -echo */
-  if (tcgetattr(STDIN_FILENO, &saved_stty))
+  if (tcgetattr(STDIN_FILENO, &stty))
     {
       perror(*argv);
       return 1;
@@ -263,18 +263,17 @@ int main(int argc, char** argv)
     waitpid(pid, NULL, 0);
   else
     {
-      line = malloc(cols * 4 * sizeof(char));
+      line = malloc(cols * 3 * sizeof(char));
       space = malloc(cols * sizeof(char));
       for (i = 0; i < cols; i++)
 	{
-	  *(line + i * 4 + 0) = 0xE2;
-	  *(line + i * 4 + 1) = 0x94;
-	  *(line + i * 4 + 2) = 0x80;
-	  *(line + i * 4 + 3) = 0x0A;
+	  *(line + i * 3 + 0) = 0xE2;
+	  *(line + i * 3 + 1) = 0x94;
+	  *(line + i * 3 + 2) = 0x80;
 	  *(space + i) = ' ';
 	}
       *(space + cols - 1) = 0;
-      *(line + (cols - 2) * 4) = 0;
+      *(line + (cols - 2) * 3) = 0;
       
       if (ndevices)
 	{
@@ -303,7 +302,8 @@ int main(int argc, char** argv)
 		{
 		  device = ent->d_name;
 		  if (all || (strstr(device, forbidden) != forbidden))
-		    adjust(cols, device);
+		    if (*device && (*device != '.'))
+		      adjust(cols, device);
 		}
 	      closedir(dir);
 	    }
@@ -315,7 +315,7 @@ int main(int argc, char** argv)
   
   
   /* `stty icanon echo` */
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_stty);
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_stty))
     {
       perror(*argv);
       return 1;
