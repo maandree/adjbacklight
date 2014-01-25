@@ -24,6 +24,8 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
+#include <limits.h>
+
 
 
 /**
@@ -47,7 +49,55 @@
 
 
 
-#define  adjust(X,Y,Z)
+/**
+ * Interactively adjust the backlight on a device
+ * 
+ * @param  cols    The number of columns on the terminal
+ * @param  device  The device on which to adjust backlight
+ */
+static void adjust(int cols, const char* device);
+
+/**
+ * Read a file
+ * 
+ * @param   output  Buffer to store the file's content in
+ * @param   file    The file to read
+ * @return          Zero on success, non-zero on failure
+ */
+static int readfile(char* output, const char* file);
+
+/**
+ * Write an integer to a file
+ * 
+ * @param   buffer   Buffer for temporary data
+ * @param   integer  The integer to write
+ * @param   file     The file to which to write
+ * @return           Zero on success, non-zero on failure
+ */
+static int writefile(char* buffer, int integer, const char* file);
+
+/**
+ * Print the status
+ * 
+ * @param  min   The minimum possible brightness
+ * @param  max   The maximum possible brightness
+ * @param  init  The brightness used when the program started
+ * @param  cur   The current brightness
+ * @param  cols  The number of columns on the terminal
+ */
+static void bars(int min, int max, int init, int cur, int cols);
+
+
+
+/**
+ * A series of spaces used to print the bar
+ */
+static char* space;
+
+/**
+ * A series of vertical lines used to print the bar
+ */
+static char* line;
 
 
 
@@ -61,15 +111,12 @@
 int main(int argc, char** argv)
 {
   struct winsize win;
-  int rows, cols;
   struct termios saved_stty;
   struct termios stty;
   pid_t pid;
-  
   int i, j;
-  int all = 0;
+  int all = 0, cols = 80, ndevices = 0;
   char** devices = alloca(argc * sizeof(char*));
-  int ndevices = 0;
   
   
   if (argc > 1)
@@ -179,18 +226,11 @@ int main(int argc, char** argv)
   P("\n\n\n");
   
   
-  /* rows cols = $(stty size) */
+  /* Get the size of the terminal */
   if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &win) == -1)
-    {
-      perror(*argv);
-      rows = 24;
-      cols = 80;
-    }
+    perror(*argv);
   else
-    {
-      rows = win.ws_row;
-      cols = win.ws_col;
-    }
+    cols = win.ws_col;
   
   /* Hide cursor */
   printf("%s", "\033[?25l");
@@ -211,7 +251,7 @@ int main(int argc, char** argv)
     }
   
   
-  /* Fork to diminish risk for unclean exit  */
+  /* Fork to diminish risk of unclean exit */
   pid = FORK();
   if (pid == (pid_t)-1)
     {
@@ -222,38 +262,56 @@ int main(int argc, char** argv)
   if (pid)
     waitpid(pid, NULL, 0);
   else
-    if (ndevices)
-      {
-	char* device;
-	for (i = 0; i < ndevices; i++)
-	  {
-	    device = *(devices + i);
-	    for (j = 0; *(device + j); j++)
-	      if (*(device + j) == '/')
+    {
+      line = malloc(cols * 4 * sizeof(char));
+      space = malloc(cols * sizeof(char));
+      for (i = 0; i < cols; i++)
+	{
+	  *(line + i * 4 + 0) = 0xE2;
+	  *(line + i * 4 + 1) = 0x94;
+	  *(line + i * 4 + 2) = 0x80;
+	  *(line + i * 4 + 3) = 0x0A;
+	  *(space + i) = ' ';
+	}
+      *(space + cols - 1) = 0;
+      *(line + (cols - 2) * 4) = 0;
+      
+      if (ndevices)
+	{
+	  char* device;
+	  for (i = 0; i < ndevices; i++)
+	    {
+	      device = *(devices + i);
+	      for (j = 0; *(device + j); j++)
+		if (*(device + j) == '/')
+		  {
+		    device += j + 1;
+		    j = -1;
+		  }
+	      adjust(cols, device);
+	    }
+	}
+      else
+	{
+	  struct dirent* ent;
+	  DIR* dir = opendir("/sys/class/backlight");
+	  if (dir)
+	    {
+	      char* device;
+	      char* forbidden = "acpi_video";
+	      while ((ent = readdir(dir)))
 		{
-		  device += j + 1;
-		  j = -1;
+		  device = ent->d_name;
+		  if (all || (strstr(device, forbidden) != forbidden))
+		    adjust(cols, device);
 		}
-	    adjust(rows, cols, device);
-	  }
-      }
-    else
-      {
-	struct dirent* ent;
-	DIR* dir = opendir("/sys/class/backlight");
-	if (dir)
-	  {
-	    char* device;
-	    char* forbidden = "acpi_video";
-	    while ((ent = readdir(dir)))
-	      {
-		device = ent->d_name;
-		if (all || (strstr(device, forbidden) != forbidden))
-		  adjust(rows, cols, device);
-	      }
-	    closedir(dir);
-	  }
-      }
+	      closedir(dir);
+	    }
+	}
+      
+      free(line);
+      free(space);
+    }
   
   
   /* `stty icanon echo` */
@@ -268,5 +326,192 @@ int main(int argc, char** argv)
   fflush(stdout);
   
   return 0;
+}
+
+
+
+/**
+ * Interactively adjust the backlight on a device
+ * 
+ * @param  cols    The number of columns on the terminal
+ * @param  device  The device on which to adjust backlight
+ */
+static void adjust(int cols, const char* device)
+{
+  #define unnl(data)			\
+    ({					\
+      for (i = 0; *(data + i); i++)	\
+	if (*(data + i) == '\n')	\
+	  *(data + i) = 0;		\
+      data;				\
+    })
+  
+  int min, max, cur, step, init, i, d;
+  size_t lendir;
+  char* dir = alloca(PATH_MAX * sizeof(char));
+  char* buf = alloca(256);
+  
+  *dir = 0;
+  dir = strcat(dir, "/sys/class/backlight/");
+  dir = strcat(dir, device);
+  dir = strcat(dir, "/");
+  lendir = strlen(dir);
+  
+  /* Get brightness parameters */
+  min = 0;
+  if (readfile(buf, strcat(dir, "max_brightness")))
+    return;
+  max = atoi(unnl(buf));
+  *(dir + lendir) = 0;
+  if (readfile(buf, strcat(dir, "brightness")))
+    return;
+  cur = atoi(unnl(buf));
+  
+  if (max <= min)
+    return; /* what the buck */
+  
+  step = (max - min) / 200 ?: 1;
+  init = cur;
+  
+  P("\n\n\n\n\n");
+  bars(min, max, init, cur, cols);
+  
+  while ((d = getchar()) != -1)
+    switch (d)
+      {
+      case 'q':
+      case '\n':
+      case 4:
+	P("");
+	return;
+	
+      case 'A':
+      case 'C':
+	cur += step << 1;
+	/* fall through */
+      case 'B':
+      case 'D':
+	cur -= step;
+	if (cur < min)  cur = min;
+	if (cur > max)  cur = max;
+	if (writefile(buf, cur, dir))
+	  return;
+	bars(min, max, init, cur, cols);
+      }
+}
+
+
+
+/**
+ * Read a file
+ * 
+ * @param   output  Buffer to store the file's content in
+ * @param   file    The file to read
+ * @return          Zero on success, non-zero on failure
+ */
+static int readfile(char* output, const char* file)
+{
+  #define BLOCK_SIZE  256  /* We will not even encounter that much */
+  FILE* f;
+  size_t got, have = 0;
+  int ended = 0;
+  
+  if ((f = fopen(file, "r")) == NULL)
+    {
+      perror(file);
+      return -1;
+    }
+  
+  while (!ended)
+    {
+      got = fread(output + have, 1, BLOCK_SIZE, f);
+      if (got != BLOCK_SIZE)
+	{
+	  ended = feof(f);
+	  have += got;
+	  clearerr(f);
+	  fclose(f);
+	  if (!ended)
+	    {
+	      perror(file);
+	      return -1;
+	    }
+	}
+      else
+	have += got;
+    }
+  
+  *(output + have) = 0;
+  return 0;
+}
+
+
+
+/**
+ * Write an integer to a file
+ * 
+ * @param   buffer   Buffer for temporary data
+ * @param   integer  The integer to write
+ * @param   file     The file to which to write
+ * @return           Zero on success, non-zero on failure
+ */
+static int writefile(char* buffer, int integer, const char* file)
+{
+  FILE* f;
+  size_t n = 0;
+  
+  buffer += 32;
+  do
+    {
+      *(buffer - n++) = (integer % 10) + '0';
+      integer /= 10;
+    }
+      while (integer);
+  buffer -= n - 1;
+  *(buffer + n++) = '\n';
+  
+  if ((f = fopen(file, "w")) == NULL)
+    {
+      perror(file);
+      return -1;
+    }
+  
+  if (fwrite(buffer, 1, n, f) != n)
+    {
+      perror(file);
+      fclose(f);
+      return -1;
+    }
+  
+  fclose(f);
+  return 0;
+}
+
+
+
+/**
+ * Print the status
+ * 
+ * @param  min   The minimum possible brightness
+ * @param  max   The maximum possible brightness
+ * @param  init  The brightness used when the program started
+ * @param  cur   The current brightness
+ * @param  cols  The number of columns on the terminal
+ */
+static void bars(int min, int max, int init, int cur, int cols)
+{
+  int mid = (int)((cur - min) * (float)(cols - 2) / (float)(max - min) + 0.5f);
+  
+  printf("\033[1000D\033[6A");
+  printf("\033[2K┌%s┐\n", line);
+  *(space + mid) = 0;
+  printf("\033[2K│\033[47m%s\033[49m%s│\n", space, space + mid + 1);
+  *(space + mid) = ' ';
+  printf("\033[2K└%s┘\n", line);
+  printf("\033[2KMaximum brightness: %i\n", max);
+  printf("\033[2KInitial brightness: %i\n", init);
+  printf("\033[2KCurrent brightness: %i\n", cur);
+  
+  fflush(stdout);
 }
 
