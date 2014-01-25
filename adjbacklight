@@ -33,7 +33,7 @@ if (( $# > 0 )); then
 
 adjbacklight – Convient method for adjusting the backlight on your portable computer
 
-Copyright © 2012, 2013  Mattias Andrée (maandree@member.fsf.org)
+Copyright © 2012, 2013, 2014  Mattias Andrée (maandree@member.fsf.org)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ C-d             Continue to next controller, or if at last, quit
 
 
 
-Copyright © 2012, 2013  Mattias Andrée (maandree@member.fsf.org)
+Copyright © 2012, 2013, 2014  Mattias Andrée (maandree@member.fsf.org)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
