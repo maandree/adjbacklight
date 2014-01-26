@@ -60,9 +60,9 @@ dvi: $(MANUAL).dvi
 install: install-cmd install-license install-info
 
 .PHONY: install-cmd
-install-cmd: adjbacklight
+install-cmd: bin/adjbacklight
 	install -d -- "$(DESTDIR)$(PREFIX)$(BIN)"
-	install -m4755 -- "adjbacklight" "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
+	install -m4755 -- bin/adjbacklight "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
 
 .PHONY: install-license
 install-license:
