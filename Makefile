@@ -72,7 +72,7 @@ install-license:
 .PHONY: install-info
 install-info: $(MANUAL).info
 	install -d -- "$(DESTDIR)$(PREFIX)$(DATA)/info"
-	install -m644 -- "$(MANUAL).info.gz" "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
+	install -m644 -- "$(MANUAL).info" "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info"
 
 
 # remove files created by `install`
