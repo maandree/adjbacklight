@@ -497,18 +497,20 @@ int main(int argc, char** argv)
 	  free(space);
 	}
       else if (get)
-	if (nbrightness)
-	  {
-	    brightness *= 100.f;
-	    brightness /= nbrightness;
-	    printf("%.2f%%\n", brightness);
-	    fflush(stdout);
-	  }
-	else
-	  {
-	    printf("%s\n", "100.00%");
-	    fflush(stdout);
-	  }
+	{
+	  if (nbrightness)
+	    {
+	      brightness *= 100.f;
+	      brightness /= nbrightness;
+	      printf("%.2f%%\n", brightness);
+	      fflush(stdout);
+	    }
+	  else
+	    {
+	      printf("%s\n", "100.00%");
+	      fflush(stdout);
+	    }
+	}
     }
   
   
