@@ -453,7 +453,7 @@ int main(int argc, char** argv)
 	      while ((ent = readdir(dir)))
 		{
 		  device = ent->d_name;
-		  if (all || (strstr(device, forbidden) != forbidden))
+		  if (all || (strstr(device, forbidden) != device))
 		    if (*device && (*device != '.'))
 		      {
 			if (get)
