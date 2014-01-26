@@ -1,4 +1,4 @@
-# Copyright © 2012, 2013  Mattias Andrée (maandree@member.fsf.org)
+# Copyright © 2012, 2013, 2014  Mattias Andrée (maandree@member.fsf.org)
 # 
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
@@ -7,70 +7,52 @@
 # 
 # [GNU All Permissive License]
 
+OPTIMISATION = -O3
+# -Os  optimise for small size
+# -O3  optimise for performance
+# -O6  optimise for performance, can potentially miscompile
+# -Og  optimise for debugging
+# -g   include debugging data (use together with -Og or alone)
 
-PREFIX=/usr
-BIN=/bin
-DATA=/share
-LICENSES=$(DATA)/licenses
-PKGNAME=adjbacklight
-COMMAND=adjbacklight
-BINCLASS=$(DATA)/misc
+PKGNAME = adjbacklight
+COMMAND = adjbacklight
 
-BOOK=adjbacklight
-BOOKDIR=info/
+PREFIX = /usr
+BIN = /bin
+BINDIR = $(PREFIX)$(BIN)
+DATA = /share
+DATADIR = $(PREFIX)$(DATA)
+LICENSEDIR = $(DATADIR)/licenses
+
+MANUAL = adjbacklight
+MANUALDIR = info/
 
 
 # compile the package
 .PHONY: all
 all: code info
 
-.PHONY: code bash java
-code: bash java
-bash: adjbacklight.install
-java: Adjbacklight.class
+.PHONY: code
+code: bin/adjbacklight
 
-%.class: %.java
-	javac -cp . "$<"
-
-adjbacklight.install: adjbacklight
-	cp "$<" "$@"
-	sed -i 's:\$${BASH_SOURCE%/\*}:$(PREFIX)$(BINCLASS):g' "adjbacklight.install"
+bin/adjbacklight: src/adjbacklight.c
+	mkdir -p bin
+	$(CC) $(OPTIMISATION) -Wall -Wextra -std=gnu90 -o "$@" "$<"
 
 .PHONY: info
-info: $(BOOK).info.gz
-%.info: $(BOOKDIR)%.texinfo
+info: $(MANUAL).info
+%.info: $(MANUALDIR)%.texinfo
 	$(MAKEINFO) "$<"
-%.info.gz: %.info
-	gzip -9c < "$<" > "$@"
-
 
 .PHONY: pdf
-pdf: $(BOOK).pdf
-%.pdf: $(BOOKDIR)%.texinfo
+pdf: $(MANUAL).pdf
+%.pdf: $(MANUALDIR)%.texinfo
 	texi2pdf "$<"
 
-pdf.gz: $(BOOK).pdf.gz
-%.pdf.gz: %.pdf
-	gzip -9c < "$<" > "$@"
-
-pdf.xz: $(BOOK).pdf.xz
-%.pdf.xz: %.pdf
-	xz -e9 < "$<" > "$@"
-
-
 .PHONY: dvi
-dvi: $(BOOK).dvi
-%.dvi: $(BOOKDIR)%.texinfo
+dvi: $(MANUAL).dvi
+%.dvi: $(MANUALDIR)%.texinfo
 	$(TEXI2DVI) "$<"
-
-dvi.gz: $(BOOK).dvi.gz
-%.dvi.gz: %.dvi
-	gzip -9c < "$<" > "$@"
-
-dvi.xz: $(BOOK).dvi.xz
-%.dvi.xz: %.dvi
-	xz -e9 < "$<" > "$@"
-
 
 
 # install to system
@@ -78,11 +60,9 @@ dvi.xz: $(BOOK).dvi.xz
 install: install-cmd install-license install-info
 
 .PHONY: install-cmd
-install-cmd: adjbacklight.install Adjbacklight.class
+install-cmd: adjbacklight
 	install -d -- "$(DESTDIR)$(PREFIX)$(BIN)"
-	install -d -- "$(DESTDIR)$(PREFIX)$(BINCLASS)"
-	install -m755 -- "adjbacklight.install" "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
-	install -m644 -- "Adjbacklight.class" "$(DESTDIR)$(PREFIX)$(BINCLASS)/Adjbacklight.class"
+	install -m4755 -- "adjbacklight" "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
 
 .PHONY: install-license
 install-license:
@@ -90,16 +70,15 @@ install-license:
 	install -m644 -- COPYING LICENSE "$(DESTDIR)$(PREFIX)$(LICENSES)/$(PKGNAME)"
 
 .PHONY: install-info
-install-info: $(BOOK).info.gz
+install-info: $(MANUAL).info
 	install -d -- "$(DESTDIR)$(PREFIX)$(DATA)/info"
-	install -m644 -- "$(BOOK).info.gz" "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
+	install -m644 -- "$(MANUAL).info.gz" "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
 
 
 # remove files created by `install`
 .PHONY: uninstall
 uninstall:
 	-rm -- "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
-	-rm -- "$(DESTDIR)$(PREFIX)$(BINCLASS)/Adjbacklight.class"
 	-rm -- "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/COPYING"
 	-rm -- "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/LICENSE"
 	-rm -d -- "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)"
