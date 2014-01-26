@@ -27,7 +27,8 @@
 #include <string.h>
 #include <limits.h>
 #include <alloca.h>
-
+#include <grp.h>
+#include <pwd.h>
 
 
 
@@ -309,6 +310,38 @@ int main(int argc, char** argv)
 	  return 0;
 	}
     }
+  
+  
+  /* Check permissions */
+  if (getuid()) /* Always accept root */
+  {
+    struct group* video_grp = getgrnam("video");
+    if (video_grp) /* Accept everypony if the group ‘video’ does not exist */
+      {
+	struct passwd* realuser = getpwuid(getuid());
+	if (!realuser)
+	  {
+	    P("You do not exist, go away!");
+	    return 1;
+	  }
+	char** mems = video_grp->gr_mem;
+	char* realname = realuser->pw_name;
+	int ok = 0;
+	for (; *mems; mems++)
+	  if (!strcmp(realname, *mems))
+	    {
+	      ok = 1;
+	      break;
+	    }
+	endgrent();
+	if (!ok)
+	  {
+	    P("Sorry, you need to be in the group 'video'.");
+	    return 1;
+	  }
+      }
+    endpwent();
+  }
   
   
   P("\n");
