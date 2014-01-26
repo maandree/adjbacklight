@@ -38,7 +38,7 @@ Texts. A copy of the license is included in the section entitled
 @end ifnottex
 
 @titlepage
-@title adjbacklight 5
+@title adjbacklight 7
 @subtitle Convient method for adjusting the backlight on your portable computer.
 @author Mattias Andrée, maandree@@member.fsf.org
 @page
@@ -87,6 +87,7 @@ code. Just run @code{sed -i s/200/400/g src/adjbacklight.c}, if you want
 0.25 % precision.
 
 
+
 @node Invoking
 @chapter Invoking
 @cindex invoking
@@ -95,6 +96,8 @@ code. Just run @code{sed -i s/200/400/g src/adjbacklight.c}, if you want
 @cindex arguments
 @cindex device
 @cindex selecting device
+@cindex interactive mode
+@cindex non-interactive mode
 @cindex @command{adjbacklight}
 @cindex @option{-c}
 @cindex @option{--copying}
@@ -103,20 +106,53 @@ code. Just run @code{sed -i s/200/400/g src/adjbacklight.c}, if you want
 @cindex @option{--warranty}
 @cindex @option{-a}
 @cindex @option{--all}
+@cindex @option{-g}
+@cindex @option{--get}
+@cindex @option{-s}
+@cindex @option{--set}
 
 @command{adjbacklight} can be started with @option{-c}, @option{--copying} or
 @option{--copyright} for displaying copyright information, @option{-w} or
-@option{--warranty} for displaying a warranty disclaimer. If any other options
-is used, help information is displayed.
+@option{--warranty} for displaying a warranty disclaimer.
 
 To actually use the program, just execute @command{adjbacklight} without any
 arguments, or with @option{-a} or @option{--all} to not limit the devices to
 those that are not ACPI video devices. Alternatively you can list the devices
 either by full path or just the name in the directory @file{/sys/class/backlight}.
 
+If you do not want to run in interactive mode, you can use the option
+@option{-g} or @option{--get} to get the average backlight of all devices
+selected by the arguments (as in interactive mode), the value will be
+printed percents with no whitespace between the value and the percent,
+the value will be formated in the traditional computer format, only 0-9
+with one dot (.) for separation of the integer part and the decimal part
+(which will be two digits.) If you want to set the backlight there are
+a few ways to do this: @option{-s} or @option{--set} followed by a value
+or the value directly but with a prepending `=' if it does not start with
+`+' or `-'. This argument is formated similar to the value printed by
+@option{--get}, except it may end with zero, one, or two percent signed.
+`+' is used for increase in brightness, `-' for decrease. Zero percent
+signed is used for a raw value, one percent signed is used for a cooked
+value that is usable on all backlight devices, and two percent signed
+is used for a value relative to the current value.
+
+Assume the current backlight is 50 (25 %) on a device and the maximum is
+200. @code{+25} will set it to 75 (37,5 %) and @code{-25} will set it to
+25 (12,5 %). @code{+50%} will set it to 75 % (150), @code{-50%} would
+set it to -25 % (-50) but because that is not within the accepted value
+range it will be truncated to 0. @code{+100%%} will set it to 100 (50 %),
+that it 200 % of the current brightness, @code{-50%%} will set it to
+25 (12,5 %), that is 50 % of the current brightness. For the following
+formats the `=' is optional if @option{-s} or @option{--set} is used.
+@code{=150} will set the brightness to 150 (75 %), @code{=50%} will set
+it to 50 % (100), and @code{=200%%} will set it to 100 (50 %), that is
+200 % of the current brightness.
+
+
 
 @node Using
 @chapter Using
+@cindex interactive mode
 @cindex usage
 @cindex keyboard
 @cindex darken screen
@@ -125,21 +161,15 @@ either by full path or just the name in the directory @file{/sys/class/backlight
 @cindex exit
 @cindex close
 @cindex next screen
-@cindex password
-@cindex @command{sudo}
 
-These key commands work when you start @command{adjbacklight} without
-arguments and can see a bar. Due to restricted write permissions in
-@file{/sys} you are required to enter your password and need to be a
-sudoer; if you do not want this you could make your init sequence
-give you write permissions to @file{/sys/class/backlight/*/brightness},
-and just remove the @command{sudo} in the bash script @file{adjbacklight}.
+When you run @command{adjbacklight} in interactive mode, the following
+keys are used to adjust the backlighting:
 
 The @kbd{left} and @kbd{down} arrow keys are used to darken the screen.
 The @kbd{right} and @kbd{up} arrow keys are used to brighten the screen.
-
 @kbd{q}, @kbd{enter} and @kbd{<control>d} continues to the next backlight
-controller, or if you are at the last one, quits the program.
+controller, or if you are at the last one, exits the program.
+
 
 
 @node Behind the scenes
