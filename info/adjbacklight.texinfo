@@ -18,7 +18,7 @@
 @copying
 This manual is for @command{adjbacklight}.
 
-Copyright @copyright{} 2013 Mattias Andrée  (maandree@@member.fsf.org)
+Copyright @copyright{} 2013, 2014 Mattias Andrée  (maandree@@member.fsf.org)
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -38,7 +38,7 @@ Texts. A copy of the license is included in the section entitled
 @end ifnottex
 
 @titlepage
-@title adjbacklight 4
+@title adjbacklight 5
 @subtitle Convient method for adjusting the backlight on your portable computer.
 @author Mattias Andrée, maandree@@member.fsf.org
 @page
@@ -83,7 +83,8 @@ if you are in the TTY.
 
 @command{adjbacklight} allows 0.5 % precision, assuming that the firmware allows
 at least that. If you want higher precision, it is simple to modify the source
-code. Just @code{sed -i s/200/400/g Adjbacklight.java}, if you want 0.25 % precision.
+code. Just run @code{sed -i s/200/400/g src/adjbacklight.c}, if you want
+0.25 % precision.
 
 
 @node Invoking
@@ -163,7 +164,7 @@ value in @file{brightness}, the minimum value is 0.
 @flushleft
 adjbacklight – Convient method for adjusting the backlight on your portable computer
 
-Copyright © 2012, 2013  Mattias Andrée (maandree@@member.fsf.org)
+Copyright © 2012, 2013, 2014  Mattias Andrée (maandree@@member.fsf.org)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
