@@ -48,7 +48,17 @@
 /**
  * Forking method
  */
+#ifndef FORK
 #define FORK  fork
+#endif
+
+
+/**
+ * The directory where the backlight devices are found and configured
+ */
+#ifndef BACKLIGHT_DIR
+#define BACKLIGHT_DIR  "/sys/class/backlight"
+#endif
 
 
 /**
@@ -218,7 +228,7 @@ int main(int argc, char** argv)
 	      if (i + 1 == argc)
 		fprintf(stderr, "%s: argument for option %s is missing, ignoring option\n", *argv, arg);
 	      else
-		if (!isnumerical(tmp = *(argv + i++)))
+		if (!isnumerical(tmp = *(argv + ++i)))
 		  fprintf(stderr, "%s: argument for option %s is malformated, ignoring option\n", *argv, arg);
 		else
 		  {
@@ -245,7 +255,7 @@ int main(int argc, char** argv)
 	    }
 	  #undef T
 	}
-      if (all + ndevices == 0)
+      if ((all + ndevices + get == 0) && !set)
 	{
 	  P("\n");
 	  P("adjbacklight - Convient method for adjusting the backlight on your portable computer");
@@ -344,14 +354,17 @@ int main(int argc, char** argv)
   }
   
   
-  P("\n");
-  P("If the program is abnormally aborted the may be some residual");
-  P("effects on the terminal. the following commands should reset it:");
-  P("");
-  P("    stty icanon echo");
-  P("    echo -en '\\e[?25h'");
-  P("");
-  P("\n\n\n");
+  if (!get && !set)
+    {
+      P("\n");
+      P("If the program is abnormally aborted the may be some residual");
+      P("effects on the terminal. the following commands should reset it:");
+      P("");
+      P("    stty icanon echo");
+      P("    echo -en '\\e[?25h'");
+      P("");
+      P("\n\n\n");
+    }
   
   
   if (!get && !set)
@@ -445,7 +458,7 @@ int main(int argc, char** argv)
       else
 	{
 	  struct dirent* ent;
-	  DIR* dir = opendir("/sys/class/backlight");
+	  DIR* dir = opendir(BACKLIGHT_DIR);
 	  if (dir)
 	    {
 	      char* device;
@@ -555,7 +568,7 @@ static void adjust(int cols, const char* device)
   char* buf = alloca(256 * sizeof(char));
   
   *dir = 0;
-  dir = strcat(dir, "/sys/class/backlight/");
+  dir = strcat(dir, BACKLIGHT_DIR "/");
   dir = strcat(dir, device);
   dir = strcat(dir, "/");
   lendir = strlen(dir);
@@ -619,7 +632,7 @@ static float getbrightness(const char* device)
   char* buf = alloca(256);
   
   *dir = 0;
-  dir = strcat(dir, "/sys/class/backlight/");
+  dir = strcat(dir, BACKLIGHT_DIR "/");
   dir = strcat(dir, device);
   dir = strcat(dir, "/");
   lendir = strlen(dir);
@@ -657,7 +670,7 @@ static void setbrightness(const char* device, const char* adjustment)
   int act = 0, integer = 0, decimal = 0, p = 0, d = 0;
   
   *dir = 0;
-  dir = strcat(dir, "/sys/class/backlight/");
+  dir = strcat(dir, BACKLIGHT_DIR "/");
   dir = strcat(dir, device);
   dir = strcat(dir, "/");
   lendir = strlen(dir);
@@ -699,8 +712,10 @@ static void setbrightness(const char* device, const char* adjustment)
     else
       {
 	integer *= 10;
-	integer -= (*adjustment) - '0';
+	integer += (*adjustment) - '0';
       }
+  if (!d)
+    d = 1;
   
   /* Count number of p:s */
   while (*adjustment++)
@@ -708,11 +723,11 @@ static void setbrightness(const char* device, const char* adjustment)
   
   /* Calculate value to send */
   if (p == 0)
-    adj = (int)((double)decimal / (double)d + 0.5d) - integer;
+    adj = integer + (int)((double)decimal / (double)d + 0.5d);
   else if (p == 1)
-    adj = (int)(((double)decimal / (double)d - (double)integer) * (double)(max - min));
+    adj = (int)(((double)integer + (double)decimal / (double)d) * (double)(max - min) / 100.d);
   else
-    adj = (int)(((double)decimal / (double)d - (double)integer) * (double)cur);
+    adj = (int)(((double)integer + (double)decimal / (double)d) * (double)cur / 100.d);
   adj = (act & 1) * cur + (act | 1) * adj;
   if (adj < min)  adj = min;
   if (adj > max)  adj = max;
@@ -804,6 +819,7 @@ static int writefile(char* buffer, int integer, const char* file)
       return -1;
     }
   
+  fflush(f);
   fclose(f);
   return 0;
 }
