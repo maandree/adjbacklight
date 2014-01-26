@@ -86,6 +86,16 @@ at least that. If you want higher precision, it is simple to modify the source
 code. Just run @code{sed -i s/200/400/g src/adjbacklight.c}, if you want
 0.25 % precision.
 
+@cindex root
+@cindex video
+@cindex permissions
+To use @command{adjbacklight} you must either be root or be a member of the
+group `video'. The `video' membership requirement is artificial so you can rip
+that out from the code if you prefer, but the effective user must be `root'
+(EUID = 0) otherwise you will not have permission to use files in
+@file{/sys/class/backlight} unless you make your initialisation
+system give you access.
+
 
 
 @node Invoking
