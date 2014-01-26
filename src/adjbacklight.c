@@ -100,6 +100,14 @@ static void adjust(int cols, const char* device);
 static float getbrightness(const char* device);
 
 /**
+ * Sets the current backlight setting on a device
+ * 
+ * @param  device      The device from which to get backlight
+ * @param  adjustment  The adjustment to make
+ */
+static void setbrightness(const char* device, const char* adjustment);
+
+/**
  * Read a file
  * 
  * @param   output  Buffer to store the file's content in
@@ -395,6 +403,8 @@ int main(int argc, char** argv)
 		      nbrightness++;
 		    }
 		}
+	      else if (set)
+		setbrightness(device, set);
 	      else
 		adjust(cols, device);
 	    }
@@ -422,6 +432,8 @@ int main(int argc, char** argv)
 				nbrightness++;
 			      }
 			  }
+			else if (set)
+			  setbrightness(device, set);
 			else
 			  adjust(cols, device);
 		      }
@@ -593,6 +605,87 @@ static float getbrightness(const char* device)
     return -1.f; /* what the buck */
   
   return (float)cur / (float)(max - min);
+}
+
+
+
+/**
+ * Sets the current backlight setting on a device
+ * 
+ * @param  device      The device from which to get backlight
+ * @param  adjustment  The adjustment to make
+ */
+static void setbrightness(const char* device, const char* adjustment)
+{
+  int min, max, cur, i, adj;
+  size_t lendir;
+  char* dir = alloca(PATH_MAX * sizeof(char));
+  char* buf = alloca(256);
+  int act = 0, integer = 0, decimal = 0, p = 0, d = 0;
+  
+  *dir = 0;
+  dir = strcat(dir, "/sys/class/backlight/");
+  dir = strcat(dir, device);
+  dir = strcat(dir, "/");
+  lendir = strlen(dir);
+  
+  /* Get brightness parameters */
+  min = 0;
+  if (readfile(buf, strcat(dir, "max_brightness")))
+    return;
+  max = atoi(unnl(buf));
+  *(dir + lendir) = 0;
+  if (readfile(buf, strcat(dir, "brightness")))
+    return;
+  cur = atoi(unnl(buf));
+  
+  if (max <= min)
+    return; /* what the buck */
+  
+  /* Read -/+/= head */
+  if (*adjustment == '-')
+    act = -1;
+  else if (*adjustment == '+')
+    act = 1;
+  else if (*adjustment != '=')
+    adjustment--;
+  adjustment++;
+  
+  /* Parse numerical part */
+  for (; *adjustment && (*adjustment != '%'); adjustment++)
+    if (*adjustment == '.')
+      d = 1;
+    else if (d)
+      {
+	if ((d * 10 < 0) || (decimal * 10 + 9 < 0)) /* stop if the precision is too high */
+	  continue;
+	d *= 10;
+	decimal *= 10;
+	decimal += (*adjustment) - '0';
+      }
+    else
+      {
+	integer *= 10;
+	integer -= (*adjustment) - '0';
+      }
+  
+  /* Count number of p:s */
+  while (*adjustment++)
+    p++;
+  
+  /* Calculate value to send */
+  if (p == 0)
+    adj = (int)((double)decimal / (double)d + 0.5d) - integer;
+  else if (p == 1)
+    adj = (int)(((double)decimal / (double)d - (double)integer) * (double)(max - min));
+  else
+    adj = (int)(((double)decimal / (double)d - (double)integer) * (double)cur);
+  adj = (act & 1) * cur + (act | 1) * adj;
+  if (adj < min)  adj = min;
+  if (adj > max)  adj = max;
+  
+  /* Send value */
+  writefile(buf, adj, dir);
 }
 
 
