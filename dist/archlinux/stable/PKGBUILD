@@ -10,7 +10,7 @@ license=('GPL3')
 depends=('linux')
 makedepends=('gcc' 'make' 'coreutils')
 source=(https://github.com/maandree/adjbacklight/archive/${pkgver}.tar.gz)
-sha256sums=(0f38af21aa36f6de1eb6fab91c4b8da6279fdd25e381149a1856cc06fd39ffc4)
+sha256sums=(d00406783c383f9849f365bf099c9e7b405d70f250ced4889f5bbe2c7b1f1067)
 
 
 build() {
