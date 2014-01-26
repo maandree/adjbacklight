@@ -177,7 +177,7 @@ int main(int argc, char** argv)
   int i, j;
   pid_t pid = 0;
   char* set = NULL;
-  int get = 0, all = 0, cols = 80, ndevices = 0;
+  int get = 0, help = 0, all = 0, cols = 80, ndevices = 0;
   char** devices = alloca(argc * sizeof(char*));
   
   
@@ -188,7 +188,9 @@ int main(int argc, char** argv)
 	{
 	  #define T(S)  (!strcmp(arg, S))
 	  arg = *(argv + i);
-	  if (T("-a") || T("--all"))
+	  if (T("-h") || T("--help"))
+	    help = 1;
+	  else if (T("-a") || T("--all"))
 	    all = 1;
 	  else if (T("-c") || T("--copyright") || T("--copying"))
 	    {
@@ -255,7 +257,8 @@ int main(int argc, char** argv)
 	    }
 	  #undef T
 	}
-      if ((all + ndevices + get == 0) && !set)
+      fflush(stderr);
+      if (help || ((all + ndevices + get == 0) && !set))
 	{
 	  P("\n");
 	  P("adjbacklight - Convient method for adjusting the backlight on your portable computer");
@@ -494,12 +497,18 @@ int main(int argc, char** argv)
 	  free(space);
 	}
       else if (get)
-	{
-	  brightness *= 100.f;
-	  brightness /= nbrightness;
-	  printf("%.2f%%\n", brightness);
-	  fflush(stdout);
-	}
+	if (nbrightness)
+	  {
+	    brightness *= 100.f;
+	    brightness /= nbrightness;
+	    printf("%.2f%%\n", brightness);
+	    fflush(stdout);
+	  }
+	else
+	  {
+	    printf("%s\n", "100.00%");
+	    fflush(stdout);
+	  }
     }
   
   
@@ -548,6 +557,9 @@ static int isnumerical(const char* str)
 	case '%':
 	  p++;
 	  break;
+	  
+	default:
+	  return 0;
 	}
     }
   return p <= 2;
