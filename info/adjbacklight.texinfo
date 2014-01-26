@@ -38,7 +38,7 @@ Texts. A copy of the license is included in the section entitled
 @end ifnottex
 
 @titlepage
-@title adjbacklight 7
+@title adjbacklight 7.1
 @subtitle Convient method for adjusting the backlight on your portable computer.
 @author Mattias Andrée, maandree@@member.fsf.org
 @page
