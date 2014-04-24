@@ -7,12 +7,11 @@
 # 
 # [GNU All Permissive License]
 
-OPTIMISATION = -O3
-# -Os  optimise for small size
-# -O3  optimise for performance
-# -O6  optimise for performance, can potentially miscompile
-# -Og  optimise for debugging
-# -g   include debugging data (use together with -Og or alone)
+OPTIMISATION = -Ofast
+# -Os     optimise for small size
+# -Ofast  optimise for performance
+# -Og     optimise for debugging
+# -g      include debugging data (use together with -Og or alone)
 
 PKGNAME = adjbacklight
 COMMAND = adjbacklight
@@ -27,6 +26,8 @@ LICENSEDIR = $(DATADIR)/licenses
 MANUAL = adjbacklight
 MANUALDIR = info/
 
+WARN = -Wall -Wextra
+
 
 # compile the package
 .PHONY: all
@@ -37,7 +38,7 @@ code: bin/adjbacklight
 
 bin/adjbacklight: src/adjbacklight.c
 	mkdir -p bin
-	$(CC) $(OPTIMISATION) -Wall -Wextra -std=gnu90 -o "$@" "$<"
+	$(CC) $(OPTIMISATION) $(WARN) -std=gnu90 -o "$@" "$<"
 
 .PHONY: info
 info: $(MANUAL).info
@@ -88,5 +89,5 @@ uninstall:
 # remove files created by `all`
 .PHONY: clean
 clean:
-	-rm -r *.{class,t2d,aux,cp,cps,fn,ky,log,pg,pgs,toc,tp,vr,vrs,op,ops,bak,info,pdf,ps,dvi,gz,install} 2>/dev/null
+	-rm -r *.{class,t2d,aux,cp,cps,fn,ky,log,pg,pgs,toc,tp,vr,vrs,op,ops,bak,info,pdf,ps,dvi,gz,install}
 
