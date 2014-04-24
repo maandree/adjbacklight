@@ -26,7 +26,17 @@ LICENSEDIR = $(DATADIR)/licenses
 MANUAL = adjbacklight
 MANUALDIR = info/
 
-WARN = -Wall -Wextra
+WARN = -Wall -Wextra -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include-dirs            \
+       -Wtrampolines -Wfloat-equal -Wshadow -Wmissing-prototypes -Wmissing-declarations          \
+       -Wredundant-decls -Wnested-externs -Winline -Wno-variadic-macros -Wsync-nand              \
+       -Wunsafe-loop-optimizations -Wcast-align -Wstrict-overflow -Wdeclaration-after-statement  \
+       -Wundef -Wbad-function-cast -Wcast-qual -Wwrite-strings -Wlogical-op -Waggregate-return   \
+       -Wstrict-prototypes -Wold-style-definition -Wpacked -Wvector-operation-performance        \
+       -Wunsuffixed-float-constants -Wsuggest-attribute=const -Wsuggest-attribute=noreturn       \
+       -Wsuggest-attribute=pure -Wsuggest-attribute=format -Wnormalized=nfkc -Wconversion        \
+       -fstrict-aliasing -fstrict-overflow -fipa-pure-const -ftree-vrp -fstack-usage             \
+       -funsafe-loop-optimizations
+# excluded: -pedantic
 
 
 # compile the package
@@ -89,5 +99,5 @@ uninstall:
 # remove files created by `all`
 .PHONY: clean
 clean:
-	-rm -r *.{class,t2d,aux,cp,cps,fn,ky,log,pg,pgs,toc,tp,vr,vrs,op,ops,bak,info,pdf,ps,dvi,gz,install}
+	-rm -r *.{class,t2d,aux,cp,cps,fn,ky,log,pg,pgs,toc,tp,vr,vrs,op,ops,bak,info,pdf,ps,dvi,gz,install} bin
 
