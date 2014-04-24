@@ -16,6 +16,7 @@ obj/
 *.out
 *.o
 *.gch
+*.su
 
 /dist/*/*/*
 !/dist/*/*/PKGBUILD

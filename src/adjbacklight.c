@@ -174,17 +174,17 @@ int main(int argc, char** argv)
   struct winsize win;
   struct termios saved_stty;
   struct termios stty;
-  int i, j;
+  size_t i, ndevices = 0;
   pid_t pid = 0;
   char* set = NULL;
-  int get = 0, help = 0, all = 0, cols = 80, ndevices = 0;
-  char** devices = alloca(argc * sizeof(char*));
+  int j, get = 0, help = 0, all = 0, cols = 80;
+  char** devices = alloca((size_t)argc * sizeof(char*));
   
   
   if (argc > 1)
     {
       char* arg;
-      for (i = 1; i < argc; i++)
+      for (i = 1; i < (size_t)argc; i++)
 	{
 	  #define T(S)  (!strcmp(arg, S))
 	  arg = *(argv + i);
@@ -227,7 +227,7 @@ int main(int argc, char** argv)
 	  else if (T("-s") || T("--set"))
 	    {
 	      char* tmp;
-	      if (i + 1 == argc)
+	      if (i + 1 == (size_t)argc)
 		fprintf(stderr, "%s: argument for option %s is missing, ignoring option\n", *argv, arg);
 	      else
 		if (!isnumerical(tmp = *(argv + ++i)))
@@ -258,7 +258,7 @@ int main(int argc, char** argv)
 	  #undef T
 	}
       fflush(stderr);
-      if (help || ((all + ndevices + get == 0) && !set))
+      if (help || (((size_t)all + ndevices + (size_t)get == 0) && !set))
 	{
 	  P("\n");
 	  P("adjbacklight - Convient method for adjusting the backlight on your portable computer");
@@ -332,14 +332,17 @@ int main(int argc, char** argv)
     if (video_grp) /* Accept everypony if the group ‘video’ does not exist */
       {
 	struct passwd* realuser = getpwuid(getuid());
+	char** mems;
+	char* realname;
+	int ok;
 	if (!realuser)
 	  {
 	    P("You do not exist, go away!");
 	    return 1;
 	  }
-	char** mems = video_grp->gr_mem;
-	char* realname = realuser->pw_name;
-	int ok = 0;
+	mems = video_grp->gr_mem;
+	realname = realuser->pw_name;
+	ok = 0;
 	for (; *mems; mems++)
 	  if (!strcmp(realname, *mems))
 	    {
@@ -389,7 +392,7 @@ int main(int argc, char** argv)
 	  return 1;
 	}
       saved_stty = stty;
-      stty.c_lflag &= ~(ICANON | ECHO);
+      stty.c_lflag &= (tcflag_t)~(ICANON | ECHO);
       if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty))
 	{
 	  perror(*argv);
@@ -418,9 +421,9 @@ int main(int argc, char** argv)
       
       if (!get && !set)
 	{
-	  line = malloc(cols * 3 * sizeof(char));
-	  space = malloc(cols * sizeof(char));
-	  for (i = 0; i < cols; i++)
+	  line = malloc((size_t)cols * 3 * sizeof(char));
+	  space = malloc((size_t)cols * sizeof(char));
+	  for (i = 0; i < (size_t)cols; i++)
 	    {
 	      *(line + i * 3 + 0) = (char)(0xE2);
 	      *(line + i * 3 + 1) = (char)(0x94);
@@ -465,11 +468,10 @@ int main(int argc, char** argv)
 	  if (dir)
 	    {
 	      char* device;
-	      char* forbidden = "acpi_video";
 	      while ((ent = readdir(dir)))
 		{
 		  device = ent->d_name;
-		  if (all || (strstr(device, forbidden) != device))
+		  if (all || (strstr(device, "acpi_video") != device))
 		    if (*device && (*device != '.'))
 		      {
 			if (get)
@@ -501,8 +503,8 @@ int main(int argc, char** argv)
 	  if (nbrightness)
 	    {
 	      brightness *= 100.f;
-	      brightness /= nbrightness;
-	      printf("%.2f%%\n", brightness);
+	      brightness /= (float)nbrightness;
+	      printf("%.2f%%\n", (double)brightness);
 	      fflush(stdout);
 	    }
 	  else
@@ -717,7 +719,9 @@ static void setbrightness(const char* device, const char* adjustment)
       d = 1;
     else if (d)
       {
-	if ((d * 10 < 0) || (decimal * 10 + 9 < 0)) /* stop if the precision is too high */
+	if ((long long)d * 10 > (long long)INT_MAX)
+	  continue;
+	if ((long long)decimal * 10 + 9 > (long long)INT_MAX)
 	  continue;
 	d *= 10;
 	decimal *= 10;
@@ -813,7 +817,7 @@ static int writefile(char* buffer, int integer, const char* file)
   buffer += 32;
   do
     {
-      *(buffer - n++) = (integer % 10) + '0';
+      *(buffer - n++) = (char)((integer % 10) + '0');
       integer /= 10;
     }
       while (integer);
@@ -851,7 +855,7 @@ static int writefile(char* buffer, int integer, const char* file)
  */
 static void bars(int min, int max, int init, int cur, int cols)
 {
-  int mid = (int)((cur - min) * (float)(cols - 2) / (float)(max - min) + 0.5f);
+  int mid = (int)((float)(cur - min) * (float)(cols - 2) / (float)(max - min) + 0.5f);
   
   printf("\033[1000D\033[6A");
   printf("\033[2K┌%s┐\n", line);
