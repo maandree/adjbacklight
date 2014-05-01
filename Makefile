@@ -72,28 +72,28 @@ install: install-cmd install-license install-info
 
 .PHONY: install-cmd
 install-cmd: bin/adjbacklight
-	install -d -- "$(DESTDIR)$(PREFIX)$(BIN)"
-	install -m4755 -- bin/adjbacklight "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
+	install -d -- "$(DESTDIR)$(BINDIR)"
+	install -m4755 -- bin/adjbacklight "$(DESTDIR)$(BINDIR)/$(COMMAND)"
 
 .PHONY: install-license
 install-license:
-	install -d -- "$(DESTDIR)$(PREFIX)$(LICENSES)/$(PKGNAME)"
-	install -m644 -- COPYING LICENSE "$(DESTDIR)$(PREFIX)$(LICENSES)/$(PKGNAME)"
+	install -d -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	install -m644 -- COPYING LICENSE "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 
 .PHONY: install-info
 install-info: $(MANUAL).info
-	install -d -- "$(DESTDIR)$(PREFIX)$(DATA)/info"
-	install -m644 -- "$(MANUAL).info" "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info"
+	install -d -- "$(DESTDIR)$(DATADIR)/info"
+	install -m644 -- "$(MANUAL).info" "$(DESTDIR)$(DATADIR)/info/$(PKGNAME).info"
 
 
 # remove files created by `install`
 .PHONY: uninstall
 uninstall:
-	-rm -- "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
-	-rm -- "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/COPYING"
-	-rm -- "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)/LICENSE"
-	-rm -d -- "$(DESTDIR)$(PREFIX)$(DATA)$(LICENSES)/$(PKGNAME)"
-	-rm -- "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
+	-rm -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
+	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
+	-rm -d -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	-rm -- "$(DESTDIR)$(DATADIR)/info/$(PKGNAME).info.gz"
 
 
 # remove files created by `all`
