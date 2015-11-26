@@ -95,13 +95,13 @@ bin/%.ps: doc/info/%.texinfo
 shell: bash fish zsh
 
 .PHONY: bash
-bash: adjbacklight.bash-completion
+bash: bin/adjbacklight.bash-completion
 
 .PHONY: fish
-fish: adjbacklight.fish-completion
+fish: bin/adjbacklight.fish-completion
 
 .PHONY: zsh
-zsh: adjbacklight.zsh-completion
+zsh: bin/adjbacklight.zsh-completion
 
 obj/adjbacklight.auto-completion: src/adjbacklight.auto-completion
 	@mkdir -p obj
@@ -184,7 +184,7 @@ install-fish: bin/adjbacklight.fish-completion
 
 .PHONY: install-zsh
 install-zsh: bin/adjbacklight.zsh-completion
-	install -dm755 -- "$(DESTDIR)$(DATADIR)/zsh/site-functions)"
+	install -dm755 -- "$(DESTDIR)$(DATADIR)/zsh/site-functions"
 	install -m644 "$<" -- "$(DESTDIR)$(DATADIR)/zsh/site-functions/_$(COMMAND)"
 
 

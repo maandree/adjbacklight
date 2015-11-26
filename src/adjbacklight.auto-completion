@@ -1,6 +1,4 @@
 (adjbacklight
-	(default  (arg '(+|-|=)LEVEL[%|%%]')  (files -0)  (description 'Adjust backlight'))
-
 	(unargumented  (options -c --copyright --copying)  (complete --copying)
 	(desc 'Display copyright information'))
 
