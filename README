@@ -1,1 +1,57 @@
-Convenient method for adjusting the backlight on your portable computer.
+NAME
+	adjbacklight - Convenient method for adjusting the backlight on your portable computer
+
+SYNOPSIS
+	adjbacklight (-c | -w | [-g | -s LEVEL | LEVEL] [-a | DEVICE...])
+
+DESCRIPTION
+	adjbacklight can be used to fetch or set the backlight
+	non-interactively. If these feature is not used, it starts
+	a interactive user interface in the terminal.
+
+	adjbacklight installs with the set-uid bit set, to enable any user
+	to change the backlight on the computer.
+
+	adjbacklight was originally designed for small netbooks that
+	are not running X. However, it is still suitable for desktop
+	computers and can be used inside X. In fact it seems to work
+	for all machines with backlight, which is not true for
+	xbacklight(1). adjbacklight uses /sys/class/backlight.
+	adjbacklight as been retrofitted to be convenient for use
+	inside X on desktop computers, with commands that lets it
+	be used non-interactively with hotkeys set up in xbindkeys(1).
+
+OPTIONS
+	-c
+	--copyright
+	--copying       Display copyright information.
+
+	-w
+	--warranty      Display warranty disclaimer.
+
+	-a
+	--all           Run for all devices, including ACPI devices.
+
+	-g
+	--get           Get average brightness on devices.
+
+	-s
+	--set LEVEL[%]  Set brightness on devices.
+
+	+LEVEL          Increase brightness on devices by actual value.
+	-LEVEL          Decrease brightness on devices by actual value.
+	=LEVEL          Set brightness on devices by actual value.
+
+	+LEVEL%         Increase brightness on devices by percentage.
+	-LEVEL%         Decrease brightness on devices by percentage.
+	=LEVEL%         Set brightness on devices by percentage.
+
+	+LEVEL%%        Increase brightness on devices by relative percentage.
+	-LEVEL%%        Decrease brightness on devices by relative percentage.
+	=LEVEL%%        Set brightness on devices by relative percentage.
+
+SEE ALSO
+	xbindkeys(1), xbacklight(1), sys_class_backlight(5)
+
+	Full documentation available locally via: info '(adjbacklight)'
+
