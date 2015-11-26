@@ -42,13 +42,13 @@ OPTIONS
 	-LEVEL          Decrease brightness on devices by actual value.
 	=LEVEL          Set brightness on devices by actual value.
 
-	+LEVEL%         Increase brightness on devices by percentage.
-	-LEVEL%         Decrease brightness on devices by percentage.
-	=LEVEL%         Set brightness on devices by percentage.
+	+LEVEL%         Increase brightness on devices by percentage-points.
+	-LEVEL%         Decrease brightness on devices by percentage-points.
+	=LEVEL%         Set brightness on devices by percentage-points.
 
-	+LEVEL%%        Increase brightness on devices by relative percentage.
-	-LEVEL%%        Decrease brightness on devices by relative percentage.
-	=LEVEL%%        Set brightness on devices by relative percentage.
+	+LEVEL%%        Increase brightness on devices by percentage.
+	-LEVEL%%        Decrease brightness on devices by percentage.
+	=LEVEL%%        Set brightness on devices by percentage.
 
 SEE ALSO
 	xbindkeys(1), xbacklight(1), sys_class_backlight(5)
