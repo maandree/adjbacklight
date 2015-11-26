@@ -1,5 +1,5 @@
 /**
- * adjbacklight – Convient method for adjusting the backlight on your portable computer
+ * adjbacklight – Convenient method for adjusting the backlight on your portable computer
  * 
  * Copyright © 2012, 2013, 2014  Mattias Andrée (maandree@member.fsf.org)
  * 
@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 	  else if (T("-c") || T("--copyright") || T("--copying"))
 	    {
 	      P("\n");
-	      P("adjbacklight – Convient method for adjusting the backlight on your portable computer");
+	      P("adjbacklight – Convenient method for adjusting the backlight on your portable computer");
 	      P("");
 	      P("Copyright © " _YEARS_ "  Mattias Andrée (maandree@member.fsf.org)");
 	      P("");
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
       if (help || (((size_t)all + ndevices + (size_t)get == 0) && !set))
 	{
 	  P("\n");
-	  P("adjbacklight - Convient method for adjusting the backlight on your portable computer");
+	  P("adjbacklight - Convenient method for adjusting the backlight on your portable computer");
 	  P("");
 	  P("USAGE: adjbacklight (-c | -w | [-g | -s LEVEL | LEVEL] [-a | DEVICE...])");
 	  P("");
