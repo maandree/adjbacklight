@@ -1,0 +1,19 @@
+(adjbacklight
+	(default  (arg '(+|-|=)LEVEL[%|%%]')  (files -0)  (description 'Adjust backlight'))
+
+	(unargumented  (options -c --copyright --copying)  (complete --copying)
+	(desc 'Display copyright information'))
+
+	(unargumented  (options -w --warranty)  (complete --warranty)
+	(desc 'Display warranty disclaimer'))
+
+	(unargumented  (options -a --all)  (complete --all)
+	(desc 'Run for all devices, including ACPI devices'))
+
+	(unargumented  (options -g --get)  (complete --get)
+	(desc 'Get average brightness on devices'))
+
+	(argumented  (options -s --set)  (complete --set)  (files 'LEVEL[%]')  (files -0)
+	(desc 'Set brightness on devices'))
+)
+

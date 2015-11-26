@@ -43,10 +43,10 @@ WARN = -Wall -Wextra -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include
 
 # compile the package
 .PHONY: default
-default: code info
+default: code info shell
 
 .PHONY: all
-all: code doc
+all: code doc shell
 
 .PHONY: code
 code: bin/adjbacklight
@@ -89,13 +89,34 @@ bin/%.ps: $(MANUALDIR)%.texinfo
 	cd obj/ps && texi2pdf --ps ../../"$<" < /dev/null
 	mv obj/ps/$*.ps $@
 
+.PHONY: shell
+shell: bash fish zsh
+
+.PHONY: bash
+bash: adjbacklight.bash-completion
+
+.PHONY: fish
+fish: adjbacklight.fish-completion
+
+.PHONY: zsh
+zsh: adjbacklight.zsh-completion
+
+obj/adjbacklight.auto-completion: src/adjbacklight.auto-completion
+	@mkdir -p obj
+	cp "$<" "$@"
+	sed -i 's/^(adjbacklight$$/($(COMMAND)/' "$@"
+
+bin/adjbacklight.%sh-completion: obj/adjbacklight.auto-completion
+	@mkdir -p bin
+	auto-auto-complete "$*sh" --output "$@" --source "$<"
+
 
 # install to system
 .PHONY: install
-install: install-base install-info
+install: install-base install-info install-shell
 
 .PHONY: install-all
-install-all: install-base install-doc
+install-all: install-base install-doc install-shell
 
 .PHONY: install-base
 install-base: install-cmd install-copyright
@@ -110,12 +131,12 @@ install-copyright: install-copying install-license
 
 .PHONY: install-copying
 install-copying:
-	install -d -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 	install -m644 -- COPYING "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 
 .PHONY: install-license
 install-license:
-	install -d -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 	install -m644 -- LICENSE "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 
 .PHONY: install-doc
@@ -123,23 +144,41 @@ install-doc: install-info install-pdf install-dvi install-ps
 
 .PHONY: install-info
 install-info: bin/$(MANUAL).info
-	install -d -- "$(DESTDIR)$(INFODIR)"
+	install -dm755 -- "$(DESTDIR)$(INFODIR)"
 	install -m644 -- "$<" "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
 
 .PHONY: install-pdf
 install-pdf: bin/$(MANUAL).pdf
-	install -d -- "$(DESTDIR)$(DOCDIR)"
+	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
 	install -m644 -- "$<" "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 
 .PHONY: install-dvi
 install-dvi: bin/$(MANUAL).dvi
-	install -d -- "$(DESTDIR)$(DOCDIR)"
+	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
 	install -m644 -- "$<" "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
 
 .PHONY: install-ps
 install-ps: bin/$(MANUAL).ps
-	install -d -- "$(DESTDIR)$(DOCDIR)"
+	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
 	install -m644 -- "$<" "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+
+.PHONY: install-shell
+install-shell: install-bash install-fish install-zsh
+
+.PHONY: install-bash
+install-bash: bin/adjbacklight.bash-completion
+	install -dm755 -- "$(DESTDIR)$(DATADIR)/bash-completion/completions"
+	install -m644 "$<" -- "$(DESTDIR)$(DATADIR)/bash-completion/completions/$(COMMAND)"
+
+.PHONY: install-fish
+install-fish: bin/adjbacklight.fish-completion
+	install -dm755 -- "$(DESTDIR)$(DATADIR)/fish/completions"
+	install -m644 "$<" -- "$(DESTDIR)$(DATADIR)/fish/completions/$(COMMAND).fish"
+
+.PHONY: install-zsh
+install-zsh: bin/adjbacklight.zsh-completion
+	install -dm755 -- "$(DESTDIR)$(DATADIR)/zsh/site-functions)"
+	install -m644 "$<" -- "$(DESTDIR)$(DATADIR)/zsh/site-functions/_$(COMMAND)"
 
 
 # remove files created by `install`
@@ -153,6 +192,9 @@ uninstall:
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+	-rm -- "$(DESTDIR)$(DATADIR)/bash-completion/completions/$(COMMAND)"
+	-rm -- "$(DESTDIR)$(DATADIR)/fish/completions/$(COMMAND).fish"
+	-rm -- "$(DESTDIR)$(DATADIR)/zsh/site-functions/_$(COMMAND)"
 
 
 # remove files created by `all`
