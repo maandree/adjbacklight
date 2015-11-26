@@ -7,15 +7,6 @@
 # 
 # [GNU All Permissive License]
 
-OPTIMISATION = -Ofast
-# -Os     optimise for small size
-# -Ofast  optimise for performance
-# -Og     optimise for debugging
-# -g      include debugging data (use together with -Og or alone)
-
-PKGNAME = adjbacklight
-COMMAND = adjbacklight
-
 PREFIX = /usr
 BIN = /bin
 BINDIR = $(PREFIX)$(BIN)
@@ -23,10 +14,20 @@ DATA = /share
 DATADIR = $(PREFIX)$(DATA)
 DOCDIR = $(DATADIR)/doc
 INFODIR = $(DATADIR)/info
+MANDIR = $(DATADIR)/man
+MAN1DIR = $(MANDIR)/man1
 LICENSEDIR = $(DATADIR)/licenses
 
-MANUAL = adjbacklight
-MANUALDIR = info/
+
+PKGNAME = adjbacklight
+COMMAND = adjbacklight
+
+
+OPTIMISATION = -Ofast
+# -Os     optimise for small size
+# -Ofast  optimise for performance
+# -Og     optimise for debugging
+# -g      include debugging data (use together with -Og or alone)
 
 WARN = -Wall -Wextra -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include-dirs            \
        -Wtrampolines -Wfloat-equal -Wshadow -Wmissing-prototypes -Wmissing-declarations          \
@@ -39,6 +40,7 @@ WARN = -Wall -Wextra -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include
        -fstrict-aliasing -fstrict-overflow -fipa-pure-const -ftree-vrp -fstack-usage             \
        -funsafe-loop-optimizations
 # excluded: -pedantic
+
 
 
 # compile the package
@@ -59,31 +61,31 @@ bin/adjbacklight: src/adjbacklight.c
 doc: info pdf dvi ps
 
 .PHONY: info
-info: bin/$(MANUAL).info
-bin/%.info: $(MANUALDIR)%.texinfo
+info: bin/adjbacklight.info
+bin/%.info: doc/info/%.texinfo
 	@mkdir -p bin
 	$(MAKEINFO) "$<"
 	mv $*.info $@
 
 .PHONY: pdf
-pdf: bin/$(MANUAL).pdf
-bin/%.pdf: $(MANUALDIR)%.texinfo
+pdf: bin/adjbacklight.pdf
+bin/%.pdf: doc/info/%.texinfo
 	@! test -d obj/pdf || rm -rf obj/pdf
 	@mkdir -p bin obj/pdf
 	cd obj/pdf && texi2pdf ../../"$<" < /dev/null
 	mv obj/pdf/$*.pdf $@
 
 .PHONY: dvi
-dvi: bin/$(MANUAL).dvi
-bin/%.dvi: $(MANUALDIR)%.texinfo
+dvi: bin/adjbacklight.dvi
+bin/%.dvi: doc/info/%.texinfo
 	@! test -d obj/dvi || rm -rf obj/dvi
 	@mkdir -p bin obj/dvi
 	cd obj/dvi && $(TEXI2DVI) ../../"$<" < /dev/null
 	mv obj/dvi/$*.dvi $@
 
 .PHONY: ps
-ps: bin/$(MANUAL).ps
-bin/%.ps: $(MANUALDIR)%.texinfo
+ps: bin/adjbacklight.ps
+bin/%.ps: doc/info/%.texinfo
 	@! test -d obj/ps || rm -rf obj/ps
 	@mkdir -p bin obj/ps
 	cd obj/ps && texi2pdf --ps ../../"$<" < /dev/null
@@ -113,7 +115,7 @@ bin/adjbacklight.%sh-completion: obj/adjbacklight.auto-completion
 
 # install to system
 .PHONY: install
-install: install-base install-info install-shell
+install: install-base install-info install-man install-shell
 
 .PHONY: install-all
 install-all: install-base install-doc install-shell
@@ -140,27 +142,32 @@ install-license:
 	install -m644 -- LICENSE "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 
 .PHONY: install-doc
-install-doc: install-info install-pdf install-dvi install-ps
+install-doc: install-info install-pdf install-dvi install-ps install-man
 
 .PHONY: install-info
-install-info: bin/$(MANUAL).info
+install-info: bin/adjbacklight.info
 	install -dm755 -- "$(DESTDIR)$(INFODIR)"
 	install -m644 -- "$<" "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
 
 .PHONY: install-pdf
-install-pdf: bin/$(MANUAL).pdf
+install-pdf: bin/adjbacklight.pdf
 	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
 	install -m644 -- "$<" "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 
 .PHONY: install-dvi
-install-dvi: bin/$(MANUAL).dvi
+install-dvi: bin/adjbacklight.dvi
 	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
 	install -m644 -- "$<" "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
 
 .PHONY: install-ps
-install-ps: bin/$(MANUAL).ps
+install-ps: bin/adjbacklight.ps
 	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
 	install -m644 -- "$<" "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+
+.PHONY: install-man
+install-man: doc/man/adjbacklight.1
+	install -dm755 -- "$(DESTDIR)$(MAN1DIR)"
+	install -m644 "$<" -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
 
 .PHONY: install-shell
 install-shell: install-bash install-fish install-zsh
@@ -187,7 +194,7 @@ uninstall:
 	-rm -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
 	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
 	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
-	-rm -d -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	-rmdir -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 	-rm -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
@@ -195,6 +202,7 @@ uninstall:
 	-rm -- "$(DESTDIR)$(DATADIR)/bash-completion/completions/$(COMMAND)"
 	-rm -- "$(DESTDIR)$(DATADIR)/fish/completions/$(COMMAND).fish"
 	-rm -- "$(DESTDIR)$(DATADIR)/zsh/site-functions/_$(COMMAND)"
+	-rm -- "$(DESTDIR)$(MAN1)/$(COMMAND).1"
 
 
 # remove files created by `all`
