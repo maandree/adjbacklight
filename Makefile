@@ -21,6 +21,8 @@ BIN = /bin
 BINDIR = $(PREFIX)$(BIN)
 DATA = /share
 DATADIR = $(PREFIX)$(DATA)
+DOCDIR = $(DATADIR)/doc
+INFODIR = $(DATADIR)/info
 LICENSEDIR = $(DATADIR)/licenses
 
 MANUAL = adjbacklight
@@ -40,50 +42,104 @@ WARN = -Wall -Wextra -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include
 
 
 # compile the package
+.PHONY: default
+default: code info
+
 .PHONY: all
-all: code info
+all: code doc
 
 .PHONY: code
 code: bin/adjbacklight
 
 bin/adjbacklight: src/adjbacklight.c
-	mkdir -p bin
+	@mkdir -p bin
 	$(CC) $(OPTIMISATION) $(WARN) -std=gnu90 -o "$@" "$<"
 
+.PHONY: code
+doc: info pdf dvi ps
+
 .PHONY: info
-info: $(MANUAL).info
-%.info: $(MANUALDIR)%.texinfo
+info: bin/$(MANUAL).info
+bin/%.info: $(MANUALDIR)%.texinfo
+	@mkdir -p bin
 	$(MAKEINFO) "$<"
+	mv $*.info $@
 
 .PHONY: pdf
-pdf: $(MANUAL).pdf
-%.pdf: $(MANUALDIR)%.texinfo
-	texi2pdf "$<"
+pdf: bin/$(MANUAL).pdf
+bin/%.pdf: $(MANUALDIR)%.texinfo
+	@! test -d obj/pdf || rm -rf obj/pdf
+	@mkdir -p bin obj/pdf
+	cd obj/pdf && texi2pdf ../../"$<" < /dev/null
+	mv obj/pdf/$*.pdf $@
 
 .PHONY: dvi
-dvi: $(MANUAL).dvi
-%.dvi: $(MANUALDIR)%.texinfo
-	$(TEXI2DVI) "$<"
+dvi: bin/$(MANUAL).dvi
+bin/%.dvi: $(MANUALDIR)%.texinfo
+	@! test -d obj/dvi || rm -rf obj/dvi
+	@mkdir -p bin obj/dvi
+	cd obj/dvi && $(TEXI2DVI) ../../"$<" < /dev/null
+	mv obj/dvi/$*.dvi $@
+
+.PHONY: ps
+ps: bin/$(MANUAL).ps
+bin/%.ps: $(MANUALDIR)%.texinfo
+	@! test -d obj/ps || rm -rf obj/ps
+	@mkdir -p bin obj/ps
+	cd obj/ps && texi2pdf --ps ../../"$<" < /dev/null
+	mv obj/ps/$*.ps $@
 
 
 # install to system
 .PHONY: install
-install: install-cmd install-license install-info
+install: install-base install-info
+
+.PHONY: install-all
+install-all: install-base install-doc
+
+.PHONY: install-base
+install-base: install-cmd install-copyright
 
 .PHONY: install-cmd
 install-cmd: bin/adjbacklight
 	install -d -- "$(DESTDIR)$(BINDIR)"
 	install -m4755 -- bin/adjbacklight "$(DESTDIR)$(BINDIR)/$(COMMAND)"
 
+.PHONY: install-copyright
+install-copyright: install-copying install-license
+
+.PHONY: install-copying
+install-copying:
+	install -d -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	install -m644 -- COPYING "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+
 .PHONY: install-license
 install-license:
 	install -d -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
-	install -m644 -- COPYING LICENSE "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	install -m644 -- LICENSE "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+
+.PHONY: install-doc
+install-doc: install-info install-pdf install-dvi install-ps
 
 .PHONY: install-info
-install-info: $(MANUAL).info
-	install -d -- "$(DESTDIR)$(DATADIR)/info"
-	install -m644 -- "$(MANUAL).info" "$(DESTDIR)$(DATADIR)/info/$(PKGNAME).info"
+install-info: bin/$(MANUAL).info
+	install -d -- "$(DESTDIR)$(INFODIR)"
+	install -m644 -- "$<" "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+
+.PHONY: install-pdf
+install-pdf: bin/$(MANUAL).pdf
+	install -d -- "$(DESTDIR)$(DOCDIR)"
+	install -m644 -- "$<" "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
+
+.PHONY: install-dvi
+install-dvi: bin/$(MANUAL).dvi
+	install -d -- "$(DESTDIR)$(DOCDIR)"
+	install -m644 -- "$<" "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+
+.PHONY: install-ps
+install-ps: bin/$(MANUAL).ps
+	install -d -- "$(DESTDIR)$(DOCDIR)"
+	install -m644 -- "$<" "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
 
 
 # remove files created by `install`
@@ -93,11 +149,14 @@ uninstall:
 	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
 	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
 	-rm -d -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
-	-rm -- "$(DESTDIR)$(DATADIR)/info/$(PKGNAME).info.gz"
+	-rm -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
+	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
 
 
 # remove files created by `all`
 .PHONY: clean
 clean:
-	-rm -r *.{class,t2d,aux,cp,cps,fn,ky,log,pg,pgs,toc,tp,vr,vrs,op,ops,bak,info,pdf,ps,dvi,gz,install} bin
+	-rm -r bin obj
 
