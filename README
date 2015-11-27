@@ -51,7 +51,7 @@ OPTIONS
 	=LEVEL%%        Set brightness on devices by percentage.
 
 SEE ALSO
-	xbindkeys(1), xbacklight(1), sys_class_backlight(5)
+	xbindkeys(1), xbacklight(1), sys_class_backlight(4)
 
 	Full documentation available locally via: info '(adjbacklight)'
 
