@@ -10,6 +10,13 @@
 @c %**end of header
 
 
+@dircategory Miscellaneous
+@direntry
+* adjbacklight: (adjbacklight).      Convenient method for adjusting the backlight on your portable computer
+@end direntry
+
+
+
 @c @defindex op
 @c @synindex op vr
 @c @synindex cp pg
@@ -46,7 +53,7 @@ Texts. A copy of the license is included in the section entitled
 @insertcopying
 @page
 @*@*
-@center And sometimes the portable computers' adjustment keys arn't even wired to the hardware…
+@center `And sometimes the portable computers' adjustment keys arn't even wired to the hardware…'
 @end titlepage
 
 @contents
