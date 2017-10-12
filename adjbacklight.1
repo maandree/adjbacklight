@@ -3,22 +3,20 @@
 adjbacklight - Convenient method for adjusting the backlight on your portable computer
 .SH SYNOPSIS
 .B adjbacklight
-(-c | -w | [-g | -s
-.IR LEVEL
-|
-.IR LEVEL ]
+[-g | -s
+.RB [ + | - ]\fIlevel\fP[ % | %% ]]
 [-a |
-.IR DEVICE ...])
+.IR device \ ...]
 .SH DESCRIPTION
 .B adjbacklight
 can be used to fetch or set the backlight non-interactively.
 If these feature is not used, it starts a interactive user
 interface in the terminal.
-.PP
+.P
 .B adjbacklight
 installs with the set-uid bit set, to enable any user to
 change the backlight on the computer.
-.PP
+.P
 .B adjbacklight
 was originally designed for small netbooks that are not running
 .BR X .
@@ -39,66 +37,51 @@ non-interactively with hotkeys set up in
 .BR xbindkeys (1).
 .SH OPTIONS
 .TP
-.BR \-c ,\  \-\-copyright ,\  \-\-copying
-Display copyright information.
-.TP
-.BR \-w, \  \-\-warranty
-Display warranty disclaimer.
-.TP
-.BR \-a, \  \-\-all
+.BR \-a
 Run for all devices, including ACPI devices.
 .TP
-.BR \-g, \  \-\-get
+.BR \-g
 Get average brightness on devices.
 .TP
-.BR \-s, \   \-\-set \ \fILEVEL\fP[%]
-Set brightness on devices.
-.PP
+.BR -s \ \fIlevel\fP
+Set brightness on devices by actual value.
 .TP
-.BR \+ \fILEVEL\fP
+.BR -s\ + \fIlevel\fP
 Increase brightness on devices by actual value.
 .TP
-.BR \- \fILEVEL\fP
+.BR -s\ - \fIlevel\fP
 Decrease brightness on devices by actual value.
 .TP
-.BR \= \fILEVEL\fP
-Set brightness on devices by actual value.
-.br
+.BR -s \ \fIlevel\fP%
+Set brightness on devices by percentage-points.
 .TP
-.BR \+ \fILEVEL\fP%
+.BR -s\ + \fIlevel\fP%
 Increase brightness on devices by percentage-points.
 .TP
-.BR \- \fILEVEL\fP%
+.BR -s\ - \fIlevel\fP%
 Decrease brightness on devices by percentage-points.
 .TP
-.BR \= \fILEVEL\fP%
-Set brightness on devices by percentage-points.
-.br
+.BR -s \ \fIlevel\fP%%
+Set brightness on devices by percentage.
 .TP
-.BR \+ \fILEVEL\fP%%
+.BR -s\ + \fIlevel\fP%%
 Increase brightness on devices by percentage.
 .TP
-.BR \- \fILEVEL\fP%%
+.BR -s\ - \fIlevel\fP%%
 Decrease brightness on devices by percentage.
+.SH KEYBOARD
 .TP
-.BR \= \fILEVEL\fP%%
-Set brightness on devices by percentage.
+.BR left ,\  down
+Darken the screen.
+.TP
+.BR right ,\  up
+Brighten the screen.
+.TP
+.BR q ,\  enter ,\  C-d
+Continue to next controller, or if at last, quit.
 .SH "SEE ALSO"
 .BR xbindkeys (1),
 .BR xbacklight (1)
-.PP
-Full documentation available locally via: info \(aq(adjbacklight)\(aq
 .SH AUTHORS
-Principal author, Mattias Andrée.  See the COPYING file for the full
-list of authors.
-.SH LICENSE
-Copyright \(co 2012, 2013, 2014, 2015  Mattias Andrée
-.br
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-.br
-This is free software: you are free to change and redistribute it.
-.br
-There is NO WARRANTY, to the extent permitted by law.
-.SH BUGS
-Please report bugs to https://github.com/maandree/adjbacklight/issues or to
-maandree@member.fsf.org
+Mattias Andrée
+.RI < maandree@kth.se >

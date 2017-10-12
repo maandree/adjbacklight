@@ -2,7 +2,7 @@ NAME
 	adjbacklight - Convenient method for adjusting the backlight on your portable computer
 
 SYNOPSIS
-	adjbacklight (-c | -w | [-g | -s LEVEL | LEVEL] [-a | DEVICE...])
+	adjbacklight [-g | -s [+|-]level[%|%%]] [-a | device ...]
 
 DESCRIPTION
 	adjbacklight can be used to fetch or set the backlight
@@ -22,36 +22,34 @@ DESCRIPTION
 	be used non-interactively with hotkeys set up in xbindkeys(1).
 
 OPTIONS
-	-c
-	--copyright
-	--copying       Display copyright information.
+	-a              Run for all devices, including ACPI devices.
 
-	-w
-	--warranty      Display warranty disclaimer.
+	-g              Get average brightness on devices.
 
-	-a
-	--all           Run for all devices, including ACPI devices.
+	-s LEVEL        Set brightness on devices by actual value.
 
-	-g
-	--get           Get average brightness on devices.
+	-s +LEVEL       Increase brightness on devices by actual value.
 
-	-s
-	--set LEVEL[%]  Set brightness on devices.
+	-s -LEVEL       Decrease brightness on devices by actual value.
 
-	+LEVEL          Increase brightness on devices by actual value.
-	-LEVEL          Decrease brightness on devices by actual value.
-	=LEVEL          Set brightness on devices by actual value.
+	-s LEVEL%       Set brightness on devices by percentage-points.
 
-	+LEVEL%         Increase brightness on devices by percentage-points.
-	-LEVEL%         Decrease brightness on devices by percentage-points.
-	=LEVEL%         Set brightness on devices by percentage-points.
+	-s +LEVEL%      Increase brightness on devices by percentage-points.
 
-	+LEVEL%%        Increase brightness on devices by percentage.
-	-LEVEL%%        Decrease brightness on devices by percentage.
-	=LEVEL%%        Set brightness on devices by percentage.
+	-s -LEVEL%      Decrease brightness on devices by percentage-points.
+
+	-s LEVEL%%      Set brightness on devices by percentage.
+
+	-s +LEVEL%%     Increase brightness on devices by percentage.
+
+	-s -LEVEL%%     Decrease brightness on devices by percentage.
+
+KEYBOARD
+	left, down      Darken the screen.
+
+	right, up       Brighten the screen.
+
+	q, enter, C-d	Continue to next controller, or if at last, quit.
 
 SEE ALSO
-	xbindkeys(1), xbacklight(1), sys_class_backlight(4)
-
-	Full documentation available locally via: info '(adjbacklight)'
-
+	xbindkeys(1), xbacklight(1)
