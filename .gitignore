@@ -4,3 +4,5 @@
 *.out
 *.su
 /adjbacklight
+/.testdir/
+/test

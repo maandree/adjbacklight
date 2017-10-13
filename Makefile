@@ -3,13 +3,22 @@
 CONFIGFILE = config.mk
 include $(CONFIGFILE)
 
-all: adjbacklight
+all: adjbacklight test
 
 adjbacklight.o: adjbacklight.c arg.h
 	$(CC) -c -o adjbacklight.o adjbacklight.c $(CCFLAGS) $(CPPFLAGS)
 
 adjbacklight: adjbacklight.o
 	$(CC) -o adjbacklight adjbacklight.o $(LDFLAGS)
+
+test.o: test.c adjbacklight.c arg.h
+	$(CC) -c -o test.o test.c $(CCFLAGS) $(CPPFLAGS)
+
+test: test.o
+	$(CC) -o test test.o $(LDFLAGS)
+
+check:
+	./test.sh
 
 install: adjbacklight
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/bin"
@@ -27,6 +36,6 @@ uninstall:
 	-rmdir -- "$(DESTDIR)$(PREFIX)/share/licenses/adjbacklight"
 
 clean:
-	-rm -- adjbacklight *.o
+	-rm -r -- adjbacklight test *.o .testdir
 
-.PHONY: all install uninstall clean
+.PHONY: all check install uninstall clean
