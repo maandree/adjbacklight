@@ -7,7 +7,9 @@ SYNOPSIS
 DESCRIPTION
 	adjbacklight can be used to fetch or set the backlight
 	non-interactively. If these feature is not used, it starts
-	a interactive user interface in the terminal.
+	a interactive user interface in the terminal. However, if
+	stdin is not a terminal, every line from stdin is parsed
+	as a -s argument.
 
 	adjbacklight installs with the set-uid bit set, to enable any user
 	to change the backlight on the computer.
