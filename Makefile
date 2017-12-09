@@ -17,7 +17,7 @@ test.o: test.c adjbacklight.c arg.h
 test: test.o
 	$(CC) -o test test.o $(LDFLAGS)
 
-check:
+check: test
 	./test.sh
 
 install: adjbacklight

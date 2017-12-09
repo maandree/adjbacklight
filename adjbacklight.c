@@ -226,153 +226,146 @@ handle_device(const char *device, int get, int set, double adj, int inc, const c
 }
 
 
-int
-main(int argc, char *argv[])
+static void
+check_permissions(void)
 {
-	int all = 0;
-	int get = 0;
-	char* set = NULL;
-	char set_prefix = '=';
-	double set_value = 0;
-	char* set_suffix = NULL;
-	struct winsize win;
-	struct termios saved_stty;
+	long int ngroups_max;
+	gid_t *groups;
+	int ngroups;
+	struct group *videogrp = getgrnam("video");
+
+	if (!getuid())
+		return;
+
+	if (!videogrp && errno && errno != ENOENT && errno != ESRCH && errno != EPERM) {
+		/* Note, glibc sets errno to EIO if the group does not exist,
+		 * this is the not the specified behavour by either POSIX or
+		 * glibc, and it would be a security issue to treat it as OK.
+		 * Additionally, EBADF is not treated as OK. */
+		fprintf(stderr, "%s: getgrnam video: %s\n", argv0, strerror(errno));
+		exit(1);
+	} else if (videogrp) {
+		ngroups_max = sysconf(_SC_NGROUPS_MAX) + 1;
+		if (ngroups_max < 0 || ngroups_max > INT_MAX - 1) {
+			fprintf(stderr, "%s: sysconf _SC_NGROUPS_MAX: %s\n", argv0, strerror(errno));
+			exit(1);
+		}
+		groups = alloca((size_t)ngroups_max * sizeof(*groups));
+		ngroups = getgroups((int)ngroups_max, groups);
+		if (ngroups < 0) {
+			fprintf(stderr, "%s: getgroups: %s\n", argv0, strerror(errno));
+			exit(1);
+		}
+		while (ngroups--)
+			if (groups[ngroups] == videogrp->gr_gid)
+				break;
+		if (ngroups < 0) {
+			fprintf(stderr, "%s: only root and members of the group 'video' may run this command\n", argv0);
+			exit(1);
+		}
+	}
+}
+
+
+static int
+parse_set_argument(const char *str, char *set_prefix, double *set_value, const char **set_suffix)
+{
+	*set_prefix = '=';
+
+	if (*str == '+' || *str == '-') {
+		*set_prefix = *str;
+		str++;
+	}
+	if (!isdigit(*str) && *str != '.')
+		return -1;
+	errno = 0;
+	*set_value = strtod(str, (void *)set_suffix);
+	if (errno || *set_value < 0) {
+		fprintf(stderr, "%s: strtod %s: %s\n", argv0, str, strerror(errno));
+		exit(1);
+	}
+	if (**set_suffix && strcmp(*set_suffix, "%") && strcmp(*set_suffix, "%%"))
+		usage();
+	if (*set_prefix == '-') {
+		*set_value = -*set_value;
+		*set_prefix = '+';
+	}
+	return 0;
+}
+
+
+static int
+init_terminal(pid_t *pid, struct termios *saved_stty)
+{
 	struct termios stty;
-	pid_t pid = -1;
+	struct winsize win;
+	int i;
+
+	printf("\n\n");
+	printf("If the program is abnormally aborted the may be some residual\n");
+	printf("effects on the terminal. the following commands should reset it:\n");
+	printf("\n");
+	printf("    stty sane\n");
+	printf("    printf '\\ec'\n");
+	printf("\n");
+	printf("\n\n\n\n");
+
+	/* Get the size of the terminal */
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &win) == -1)
+		fprintf(stderr, "%s: ioctl <stdout> TIOCGWINSZ: %s\n", argv0, strerror(errno));
+	else
+		cols = win.ws_col;
+
+	line = malloc((size_t)cols * 3);
+	space = malloc((size_t)cols);
+	if (!line || !space) {
+		fprintf(stderr, "%s: malloc: %s\n", argv0, strerror(ENOMEM));
+		exit(1);
+	}
+	for (i = 0; i < cols; i++) {
+		line[i * 3 + 0] = (char)(0xE2);
+		line[i * 3 + 1] = (char)(0x94);
+		line[i * 3 + 2] = (char)(0x80);
+	}
+	memset(space, ' ', (size_t)cols);
+	space[cols - 1] = '\0';
+	line[(cols - 2) * 3] = '\0';
+
+	/* stty -icanon -echo */
+	if (tcgetattr(STDIN_FILENO, &stty)) {
+		fprintf(stderr, "%s: tcgetattr <stdin>: %s\n", argv0, strerror(errno));
+		exit(1);
+	}
+	*saved_stty = stty;
+	stty.c_lflag &= (tcflag_t)~(ICANON | ECHO);
+	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty)) {
+		fprintf(stderr, "%s: tcsetattr <stdin>: %s\n", argv0, strerror(errno));
+		exit(1);
+	}
+
+	/* Hide cursor */
+	printf("%s", "\033[?25l");
+	fflush(stdout);
+
+	/* Fork to diminish risk of unclean exit */
+	*pid = fork();
+	if (*pid == (pid_t)-1) {
+		fprintf(stderr, "%s: fork: %s\n", argv0, strerror(errno));
+	} else if (*pid) {
+		waitpid(*pid, NULL, 0);
+		return -1;
+	}
+
+	return 0;
+}
+
+
+static int
+update(int argc, char *argv[], int all, int get, char *set, int set_prefix, double set_value, const char *set_suffix)
+{
 	DIR *dir;
 	struct dirent *ent;
-	int any = 0;
-
-	ARGBEGIN {
-	case 'a':
-		all = 1;
-		break;
-	case 'g':
-		get = 1;
-		break;
-	case 's':
-		set = EARGF(usage());
-		break;
-	default:
-		usage();
-	} ARGEND;
-
-	if ((get && set) || (argc && all))
-		usage();
-
-	/* Parse -s argument */
-	if (set) {
-		if (*set == '+' || *set == '-') {
-			set_prefix = *set;
-			set++;
-		}
-		if (!isdigit(*set) && *set != '.')
-			usage();
-		errno = 0;
-		set_value = strtod(set, &set_suffix);
-		if (errno || set_value < 0) {
-			fprintf(stderr, "%s: strtod %s: %s\n", argv0, set, strerror(errno));
-			return 1;
-		}
-		if (*set_suffix && strcmp(set_suffix, "%") && strcmp(set_suffix, "%%"))
-			usage();
-		if (set_prefix == '-') {
-			set_value = -set_value;
-			set_prefix = '+';
-		}
-	}
-
-	/* Check permissions (important because the program is installed with set-uid) */
-	if (getuid()) {
-		struct group *videogrp = getgrnam("video");
-		if (!videogrp && errno && errno != ENOENT && errno != ESRCH && errno != EPERM) {
-			/* Note, glibc sets errno to EIO if the group does not exist,
-			 * this is the not the specified behavour by either POSIX or
-			 * glibc, and it would be a security issue to treat it as OK.
-			 * Additionally, EBADF is not treated as OK. */
-			fprintf(stderr, "%s: getgrnam video: %s\n", argv0, strerror(errno));
-			return 1;
-		} else if (videogrp) {
-			long ngroups_max = sysconf(_SC_NGROUPS_MAX) + 1;
-			gid_t *groups;
-			int ngroups;
-			if (ngroups_max < 0 || ngroups_max > INT_MAX - 1) {
-				fprintf(stderr, "%s: sysconf _SC_NGROUPS_MAX: %s\n", argv0, strerror(errno));
-				return 1;
-			}
-			groups = alloca((size_t)ngroups_max * sizeof(*groups));
-			ngroups = getgroups((int)ngroups_max, groups);
-			if (ngroups < 0) {
-				fprintf(stderr, "%s: getgroups: %s\n", argv0, strerror(errno));
-				return 1;
-			}
-			while (ngroups--)
-				if (groups[ngroups] == videogrp->gr_gid)
-					break;
-			if (ngroups < 0) {
-				fprintf(stderr, "%s: only root and members of the group 'video' may run this command\n", argv0);
-				return 1;
-			}
-		}
-	}
-
-	if (!get && !set) {
-		int i;
-		printf("\n\n");
-		printf("If the program is abnormally aborted the may be some residual\n");
-		printf("effects on the terminal. the following commands should reset it:\n");
-		printf("\n");
-		printf("    stty sane\n");
-		printf("    printf '\\ec'\n");
-		printf("\n");
-		printf("\n\n\n\n");
-
-		/* Get the size of the terminal */
-		if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &win) == -1)
-			fprintf(stderr, "%s: ioctl <stdout> TIOCGWINSZ: %s\n", argv0, strerror(errno));
-		else
-			cols = win.ws_col;
-
-		line = malloc((size_t)cols * 3);
-		space = malloc((size_t)cols);
-		if (!line || !space) {
-			fprintf(stderr, "%s: malloc: %s\n", argv0, strerror(ENOMEM));
-			return 1;
-		}
-		for (i = 0; i < cols; i++) {
-			line[i * 3 + 0] = (char)(0xE2);
-			line[i * 3 + 1] = (char)(0x94);
-			line[i * 3 + 2] = (char)(0x80);
-		}
-		memset(space, ' ', (size_t)cols);
-		space[cols - 1] = '\0';
-		line[(cols - 2) * 3] = '\0';
-
-		/* stty -icanon -echo */
-		if (tcgetattr(STDIN_FILENO, &stty)) {
-			fprintf(stderr, "%s: tcgetattr <stdin>: %s\n", argv0, strerror(errno));
-			return 1;
-		}
-		saved_stty = stty;
-		stty.c_lflag &= (tcflag_t)~(ICANON | ECHO);
-		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty)) {
-			fprintf(stderr, "%s: tcsetattr <stdin>: %s\n", argv0, strerror(errno));
-			return 1;
-		}
-
-		/* Hide cursor */
-		printf("%s", "\033[?25l");
-		fflush(stdout);
-
-		/* Fork to diminish risk of unclean exit */
-		pid = fork();
-		if (pid == (pid_t)-1) {
-			fprintf(stderr, "%s: fork: %s\n", argv0, strerror(errno));
-		} else if (pid) {
-			waitpid(pid, NULL, 0);
-			goto done;
-		}
-	}
+	int any = argc;
 
 	if (argc) {
 		for (; *argv; argv++) {
@@ -396,6 +389,76 @@ main(int argc, char *argv[])
 			fprintf(stderr, "%s: cannot find any backlight devices\n", argv0);
 	}
 
+	return any;
+}
+
+
+int
+main(int argc, char *argv[])
+{
+	int all = 0;
+	int get = 0;
+	char *set = NULL;
+	char set_prefix = '=';
+	double set_value = 0;
+	const char *set_suffix = NULL;
+	pid_t pid = -1;
+	struct termios saved_stty;
+	int isinteractive = 0;
+	size_t size = 0;
+	ssize_t len;
+
+	ARGBEGIN {
+	case 'a':
+		all = 1;
+		break;
+	case 'g':
+		get = 1;
+		break;
+	case 's':
+		set = EARGF(usage());
+		break;
+	default:
+		usage();
+	} ARGEND;
+
+	if ((get && set) || (argc && all))
+		usage();
+
+	/* Parse -s argument */
+	if (set && parse_set_argument(set, &set_prefix, &set_value, &set_suffix))
+		usage();
+
+	/* Check permissions (important because the program is installed with set-uid) */
+	check_permissions();
+
+	if (!get && !set) {
+		isinteractive = isatty(STDIN_FILENO);
+		if (isinteractive && init_terminal(&pid, &saved_stty))
+			goto done;
+	}
+
+	if (get || set || isinteractive) {
+		update(argc, argv, all, get, set, set_prefix, set_value, set_suffix);
+	} else {
+		while ((len = getline(&set, &size, stdin)) > 0) {
+			if (len && set[len - 1] == '\n')
+				set[--len] = '\0';
+			if (!len)
+				continue;
+			if (parse_set_argument(set, &set_prefix, &set_value, &set_suffix)) {
+				fprintf(stderr, "%s: invalid input: %s\n", argv0, set);
+				return 0;
+			}
+			update(argc, argv, all, get, set, set_prefix, set_value, set_suffix);
+		}
+		if (ferror(stdin)) {
+			fprintf(stderr, "%s: getline <stdin>: %s\n", argv0, strerror(errno));
+			return 1;
+		}
+		free(set);
+	}
+
 	if (get) {
 		if (nbrightness) {
 			brightness *= 100;
@@ -409,7 +472,7 @@ main(int argc, char *argv[])
 	}
 
 done:
-      if (!get && !set && pid) {
+      if (isinteractive && pid) {
 	      /* Show cursor */
 	      printf("%s", "\033[?25h");
 	      fflush(stdout);

@@ -47,4 +47,11 @@ printf '%i\n' 25 > .testdir/acpi_videox/brightness
 
 test $(./test -g) = 50.00%
 
+rm -r .testdir/acpi_videox
+printf '%s\n' 5 +15 -5 +20% | ./test dev
+test $(./test -g dev) = 50.00%
+
+printf '%s\n' 5 +15 -5 +10% | ./test -a
+test $(./test -ga) = 40.00%
+
 rm -r .testdir

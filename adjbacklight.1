@@ -11,7 +11,10 @@ adjbacklight - Convenient method for adjusting the backlight on your portable co
 .B adjbacklight
 can be used to fetch or set the backlight non-interactively.
 If these feature is not used, it starts a interactive user
-interface in the terminal.
+interface in the terminal. However, if stdin is not a terminal,
+every line from stdin is parsed as a
+.B -s
+argument.
 .P
 .B adjbacklight
 installs with the set-uid bit set, to enable any user to
