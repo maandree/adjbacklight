@@ -36,6 +36,6 @@ uninstall:
 	-rmdir -- "$(DESTDIR)$(PREFIX)/share/licenses/adjbacklight"
 
 clean:
-	-rm -r -- adjbacklight test *.o .testdir
+	-rm -rf -- adjbacklight test *.o .testdir
 
 .PHONY: all check install uninstall clean
