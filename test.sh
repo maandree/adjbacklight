@@ -41,13 +41,13 @@ test $(./test -ga) = 40.00%
 ./test -s +20% dev
 test $(./test -ga) = 60.00%
 
-mkdir .testdir/acpi_videox
-printf '%i\n' 50 > .testdir/acpi_videox/max_brightness
-printf '%i\n' 25 > .testdir/acpi_videox/brightness
+mkdir .testdir/acpi_video
+printf '%i\n' 50 > .testdir/acpi_video/max_brightness
+printf '%i\n' 25 > .testdir/acpi_video/brightness
 
-test $(./test -g) = 50.00%
+test $(./test -g acpi_video) = 50.00%
 
-rm -r .testdir/acpi_videox
+rm -r .testdir/acpi_video
 printf '%s\n' 5 +15 -5 +20% | ./test dev
 test $(./test -g dev) = 50.00%
 

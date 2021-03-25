@@ -335,11 +335,11 @@ update(int argc, char *argv[], int all, int get, char *set, int set_prefix, doub
 	} else {
 		if ((dir = opendir(BACKLIGHT_DIR))) {
 			while ((ent = readdir(dir))) {
-				if (all || strstr(ent->d_name, "acpi_video") == ent->d_name) {
-					if (*ent->d_name && *ent->d_name != '.') {
-						handle_device(ent->d_name, get, !!set, set_value, set_prefix == '+', set_suffix);
-						any = 1;
-					}
+				if (*ent->d_name && *ent->d_name != '.') {
+					handle_device(ent->d_name, get, !!set, set_value, set_prefix == '+', set_suffix);
+					any = 1;
+					if (!all)
+						break;
 				}
 			}
 			closedir(dir);
