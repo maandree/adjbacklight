@@ -27,7 +27,10 @@ install: adjbacklight
 	cp -- adjbacklight "$(DESTDIR)$(PREFIX)/bin"
 	cp -- adjbacklight.1 "$(DESTDIR)$(MANPREFIX)/man1"
 	cp -- LICENSE "$(DESTDIR)$(PREFIX)/share/licenses/adjbacklight"
-	chmod -- 4755 "$(DESTDIR)$(PREFIX)/bin/adjbacklight"
+
+post-install:
+	chown -- '0:$(VIDEO_GROUP)' "$(DESTDIR)$(PREFIX)/bin/adjbacklight"
+	chmod -- 4754 "$(DESTDIR)$(PREFIX)/bin/adjbacklight"
 
 uninstall:
 	-rm -- "$(DESTDIR)$(PREFIX)/bin/adjbacklight"
@@ -38,4 +41,4 @@ uninstall:
 clean:
 	-rm -rf -- adjbacklight test *.o .testdir
 
-.PHONY: all check install uninstall clean
+.PHONY: all check install post-install uninstall clean

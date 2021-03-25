@@ -226,47 +226,6 @@ handle_device(const char *device, int get, int set, double adj, int inc, const c
 }
 
 
-static void
-check_permissions(void)
-{
-	long int ngroups_max;
-	gid_t *groups;
-	int ngroups;
-	struct group *videogrp = getgrnam("video");
-
-	if (!getuid())
-		return;
-
-	if (!videogrp && errno && errno != ENOENT && errno != ESRCH && errno != EPERM) {
-		/* Note, glibc sets errno to EIO if the group does not exist,
-		 * this is the not the specified behavour by either POSIX or
-		 * glibc, and it would be a security issue to treat it as OK.
-		 * Additionally, EBADF is not treated as OK. */
-		fprintf(stderr, "%s: getgrnam video: %s\n", argv0, strerror(errno));
-		exit(1);
-	} else if (videogrp) {
-		ngroups_max = sysconf(_SC_NGROUPS_MAX) + 1;
-		if (ngroups_max < 0 || ngroups_max > INT_MAX - 1) {
-			fprintf(stderr, "%s: sysconf _SC_NGROUPS_MAX: %s\n", argv0, strerror(errno));
-			exit(1);
-		}
-		groups = alloca((size_t)ngroups_max * sizeof(*groups));
-		ngroups = getgroups((int)ngroups_max, groups);
-		if (ngroups < 0) {
-			fprintf(stderr, "%s: getgroups: %s\n", argv0, strerror(errno));
-			exit(1);
-		}
-		while (ngroups--)
-			if (groups[ngroups] == videogrp->gr_gid)
-				break;
-		if (ngroups < 0) {
-			fprintf(stderr, "%s: only root and members of the group 'video' may run this command\n", argv0);
-			exit(1);
-		}
-	}
-}
-
-
 static int
 parse_set_argument(const char *str, char *set_prefix, double *set_value, const char **set_suffix)
 {
@@ -428,9 +387,6 @@ main(int argc, char *argv[])
 	/* Parse -s argument */
 	if (set && parse_set_argument(set, &set_prefix, &set_value, &set_suffix))
 		usage();
-
-	/* Check permissions (important because the program is installed with set-uid) */
-	check_permissions();
 
 	if (!get && !set) {
 		isinteractive = isatty(STDIN_FILENO);

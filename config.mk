@@ -1,6 +1,8 @@
 PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
+VIDEO_GROUP = video
+
 CCFLAGS  = -std=c99 -Wall -Wextra -O2
 CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700
 LDFLAGS  = -s
