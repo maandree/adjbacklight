@@ -134,11 +134,11 @@ adjbrightness(const char *device, double pcur, long int cur, long int max, doubl
 	switch (strlen(suf)) {
 	case 2:
 		pcur = adj * pcur / 100 + pcur * inc;
-		cur = (long int)(pcur * (double)max + 0.5);
+		cur = (long int)(pcur * (double)max + (double)0.5f);
 		break;
 	case 1:
 		pcur = adj / 100 + pcur * inc;
-		cur = (long int)(pcur * (double)max + 0.5);
+		cur = (long int)(pcur * (double)max + (double)0.5f);
 		break;
 	case 0:
 		cur = (long int)adj + cur * inc;
@@ -155,7 +155,7 @@ adjbrightness(const char *device, double pcur, long int cur, long int max, doubl
 static void
 bars(long int max, long int init, long int cur)
 {
-	long int mid = (long int)((double)cur * (double)(cols - 2) / (double)max + 0.5);
+	long int mid = (long int)((double)cur * (double)(cols - 2) / (double)max + (double)0.5f);
 
 	printf("\033[%iD\033[6A", cols);
 	printf("\033[2K┌%s┐\n", line);
