@@ -261,8 +261,8 @@ init_terminal(pid_t *pid, struct termios *saved_stty)
 	int i;
 
 	printf("\n\n");
-	printf("If the program is abnormally aborted the may be some residual\n");
-	printf("effects on the terminal. the following commands should reset it:\n");
+	printf("If the program is abnormally aborted there may be some residual\n");
+	printf("effects on the terminal. The following commands should reset it:\n");
 	printf("\n");
 	printf("    stty sane\n");
 	printf("    printf '\\ec'\n");
@@ -428,17 +428,17 @@ main(int argc, char *argv[])
 	}
 
 done:
-      if (isinteractive && pid) {
-	      /* Show cursor */
-	      printf("%s", "\033[?25h");
-	      fflush(stdout);
+	if (isinteractive && pid) {
+		/* Show cursor */
+		printf("%s", "\033[?25h");
+		fflush(stdout);
 
-	      /* `stty icanon echo` */
-	      if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_stty)) {
-		      fprintf(stderr, "%s: tcsetattr <stdin>: %s\n", argv0, strerror(errno));
-		      return 1;
-	      }
-      }
+		/* `stty icanon echo` */
+		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_stty)) {
+			fprintf(stderr, "%s: tcsetattr <stdin>: %s\n", argv0, strerror(errno));
+			return 1;
+		}
+	}
 
-      return 0;
+	return 0;
 }

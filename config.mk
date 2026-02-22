@@ -3,8 +3,8 @@ MANPREFIX = $(PREFIX)/share/man
 
 VIDEO_GROUP = video
 
-CC = cc
+CC = c99
 
 CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700
-CFLAGS   = -std=c99 -Wall -O2
+CFLAGS   =
 LDFLAGS  = -s

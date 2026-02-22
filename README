@@ -6,8 +6,8 @@ SYNOPSIS
 
 DESCRIPTION
 	adjbacklight can be used to fetch or set the backlight
-	non-interactively. If these feature is not used, it starts
-	a interactive user interface in the terminal. However, if
+	non-interactively. If this feature is not used, it starts
+	an interactive user interface in the terminal. However, if
 	stdin is not a terminal, every line from stdin is parsed
 	as a -s argument.
 
@@ -19,8 +19,8 @@ DESCRIPTION
 	computers and can be used inside X. In fact it seems to work
 	for all machines with backlight, which is not true for
 	xbacklight(1). adjbacklight uses /sys/class/backlight.
-	adjbacklight as been retrofitted to be convenient for use
-	inside X on desktop computers, with commands that lets it
+	adjbacklight has been retrofitted to be convenient for use
+	inside X on desktop computers, with commands that let it
 	be used non-interactively with hotkeys set up in xbindkeys(1).
 
 OPTIONS
